@@ -1,11 +1,12 @@
 <template>
   <header class="header">
     <div class="header__logo">
-      <div class="header__logo-img"></div>
+      <div class="header__logo-img">
+        <img src="/src/assets/logo.png" alt="logo" />
+      </div>
       <div class="header__logo-text">
         <div class="header__logo-subtitle">достопримечательности</div>
         <div class="header__logo-title">путевод</div>
-        
       </div>
     </div>
     <div class="header__center" :class="{ 'header__center--sidebar': sidebarOpen }">
@@ -36,7 +37,7 @@ const props = defineProps({
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  background: #f7f7f7d5;
+  background: #f7f7f7;
   padding: 25px 88px;
   border-radius: 0;
   margin: 0;
@@ -57,11 +58,18 @@ const props = defineProps({
   margin-right: 32px;
 }
 .header__logo-img {
-  width: 40px;
-  height: 40px;
-  background: #2d4834;
+  max-width: 45px;
+  max-height: 45px;
   border-radius: 12px;
+  display: flex;
+  align-items: center;
 }
+
+.header__logo-img img {
+  height: 37px;
+  width: auto;
+}
+
 .header__logo-text {
   display: flex;
   flex-direction: column;

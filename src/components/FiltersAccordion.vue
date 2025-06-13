@@ -1,52 +1,73 @@
 <template>
-    <div class="accordion" :class="{ 'with-sidebar': sidebarOpen }">
-      <div class="accordion-item" v-for="(item, idx) in items" :key="idx">
-        <h2 class="accordion-header">
-          <button
-            class="accordion-button"
-            :class="{ collapsed: opened !== idx }"
-            type="button"
-            @click="toggle(idx)"
-            :aria-expanded="opened === idx ? 'true' : 'false'"
-          >
-            {{ item.title }}
-          </button>
-        </h2>
-        <div
-          class="accordion-collapse"
-          :class="{ show: opened === idx }"
-          v-show="opened === idx"
+  <div class="accordion" :class="{ 'with-sidebar': sidebarOpen }">
+    <div class="accordion-item" v-for="(item, idx) in items" :key="idx">
+      <h2 class="accordion-header">
+        <button
+          class="accordion-button"
+          :class="{ collapsed: opened !== idx }"
+          type="button"
+          @click="toggle(idx)"
+          :aria-expanded="opened === idx ? 'true' : 'false'"
         >
-          <div class="accordion-body">
-            <template v-if="idx === 0">
-              <FiltersChips />
-            </template>
-            <template v-else>
-              <strong>{{ item.bodyTitle }}</strong> {{ item.bodyText }}
-            </template>
-          </div>
+          {{ item.title }}
+        </button>
+      </h2>
+      <div
+        ref="bodies"
+        class="accordion-collapse"
+        :style="{
+          maxHeight: opened === idx ? heights[idx] + 'px' : '0px'
+        }"
+      >
+        <div class="accordion-body">
+          <template v-if="idx === 0">
+            <FiltersChips />
+          </template>
+          <template v-else>
+            <strong>{{ item.bodyTitle }}</strong> {{ item.bodyText }}
+          </template>
         </div>
       </div>
     </div>
-  </template>
-  
-  <script setup>
-  import { ref } from 'vue';
-  import FiltersChips from './FiltersChips.vue';
-  const props = defineProps({ sidebarOpen: Boolean });
-  const opened = ref(0);
-  const items = [
-    {
-      title: 'Фильтры',
-      bodyTitle: 'Это тело аккордеона первого элемента.',
-      bodyText: 'По умолчанию оно скрыто, пока плагин сворачивания не добавит соответствующие классы, которые мы используем для стилизации каждого элемента. Эти классы управляют общим внешним видом, а также отображением и скрытием с помощью переходов CSS. Вы можете изменить все это с помощью собственного CSS или переопределить наши переменные по умолчанию. Также стоит отметить, что практически любой HTML может быть помещен в .accordion-body, хотя переход ограничивает переполнение.'
-    }
+  </div>
+</template>
 
-  ];
-  function toggle(idx) {
-    opened.value = opened.value === idx ? -1 : idx;
+  
+<script setup>
+import { ref, onMounted, nextTick } from 'vue';
+import FiltersChips from './FiltersChips.vue';
+import Archaeology from '../assets/emoji/archaeology.png'
+const props = defineProps({ sidebarOpen: Boolean });
+
+const opened = ref(0);
+const bodies = ref([]);
+const heights = ref([]);
+
+const items = [
+  {
+    title: 'Фильтры',
+    bodyTitle: 'Это тело аккордеона первого элемента.',
+    bodyText: 'По умолчанию оно скрыто, пока плагин сворачивания не добавит соответствующие классы...'
   }
-  </script>
+];
+
+function toggle(idx) {
+  opened.value = opened.value === idx ? -1 : idx;
+  nextTick(updateHeights);
+}
+
+function updateHeights() {
+  heights.value = bodies.value.map(el => (el ? el.scrollHeight : 0));
+}
+
+onMounted(() => {
+  nextTick(() => {
+    bodies.value = document.querySelectorAll('.accordion-collapse');
+    updateHeights();
+  });
+});
+
+</script>
   
   <style scoped>
   .accordion {
@@ -97,10 +118,11 @@
     color: #125341;
   }
   .accordion-collapse {
-    transition: max-height 0.3s cubic-bezier(.4,0,.2,1);
-    overflow: hidden;
-    background: #fff;
-  }
+  transition: max-height 0.4s ease;
+  overflow: hidden;
+  background: #fff;
+}
+
   .accordion-collapse.show {
     animation: fadeIn 0.2s;
   }
@@ -109,7 +131,7 @@
     to { opacity: 1; }
   }
   .accordion-body {
-    padding: 18px 24px;
+    padding: 0px 24px;
     font-size: 1rem;
     color: #444;
     background: #fff;

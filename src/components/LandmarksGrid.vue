@@ -1,15 +1,18 @@
 <template>
   <div class="landmarks-grid" :class="{ 'with-sidebar': sidebarOpen }">
-    <LandmarkCard
-      v-for="item in places"
-      :key="item.id"
-      v-bind="item"
-      :selected="selectedIds.includes(item.id)"
-      @toggle="toggleSelect"
-    />
+    <transition-group name="fade" tag="div" class="landmarks-grid-inner">
+      <LandmarkCard
+        v-for="item in places"
+        :key="item.id"
+        v-bind="item"
+        :selected="selectedIds.includes(item.id)"
+        @toggle="toggleSelect"
+      />
+    </transition-group>
     <div v-if="isLoading" class="loading">Загрузка...</div>
   </div>
 </template>
+
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
@@ -118,6 +121,31 @@ function toggleSelect(id) {
   background: #fff;
   max-width: 1750px;
 }
+.landmarks-grid-inner {
+  display: contents;
+}
+
+/* Анимация появления карточек */
+.fade-enter-active, .fade-leave-active {
+  transition: all 0.6s ease;
+}
+.fade-enter-from {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+.fade-enter-to {
+  opacity: 1;
+  transform: translateY(0);
+}
+.fade-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
 .landmarks-grid.with-sidebar {
   margin-left: 50px;
   width: calc(100% - 80px);

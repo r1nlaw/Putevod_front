@@ -20,7 +20,7 @@
 import { ref } from 'vue'
 import Header from './components/Header.vue'
 import Sidebar from './components/Sidebar.vue'
-import MapView from './components/MapView.vue'  
+import MapView from './components/MapView.vue'
 import FiltersAccordion from './components/FiltersAccordion.vue'
 import LandmarksGrid from './components/LandmarksGrid.vue'
 const sidebarOpen = ref(true)

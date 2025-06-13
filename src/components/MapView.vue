@@ -195,18 +195,19 @@ const showPopup = (feature, targetMap) => {
   const { geometry, properties } = feature;
   const { name, translated_name, image, address } = properties;
 
-  const popupHTML = `
-    <div class="popup-card">
-      ${image ? `<img src="${image}" alt="${name}" class="popup-card-image" style="max-width: 180px; max-height: 200px; object-fit: contain;" />` : ''}
-      <div class="popup-card-body">
-        <h3 class="popup-card-title">${name || 'Без названия'}</h3>
-        ${address ? `<p class="popup-card-address">${address}</p>` : ''}
-        <div style="margin-top: 10px; text-align: right;">
-          <button class="popup-card-link" data-name="${translated_name || name}">Подробнее</button>
-        </div>
+const popupHTML = `
+  <div class="popup-card">
+    ${image ? `<img src="${image}" alt="${name}" class="popup-card-image" />` : ''}
+    <div class="popup-card-body">
+      <h3 class="popup-card-title">${name || 'Без названия'}</h3>
+      ${address ? `<p class="popup-card-address">${address}</p>` : ''}
+      <div style="margin-top: 10px; text-align: right;">
+        <button class="popup-card-link" data-name="${translated_name || name}">Подробнее</button>
       </div>
     </div>
-  `;
+  </div>
+`;
+
 
   const popup = new maplibregl.Popup({ closeOnClick: true, className: 'custom-popup', maxWidth: '300px' })
     .setLngLat(geometry.coordinates)
@@ -552,45 +553,93 @@ defineExpose({
 
 /* Popup styles */
 :deep(.popup-card) {
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-  overflow: hidden;
-  width: 260px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  overflow: hidden;
+  width: 250px;
+  max-width: 90vw;
+  color: #333;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+
+  /* Зададим фиксированную высоту, например 400px */
+  height: 350px;
 }
+
 :deep(.popup-card-image) {
   width: 100%;
   height: 160px;
   object-fit: cover;
-  border-bottom: 1px solid #eee;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
 }
+
 :deep(.popup-card-body) {
-  padding: 12px 16px;
+  padding: 16px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  height: 50%; /* Остальная половина карточки */
 }
+
 :deep(.popup-card-title) {
-  font-size: 1.1rem;
-  font-weight: bold;
-  margin: 0;
-  color: #333;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: #222;
 }
+
+:deep(.maplibregl-popup-close-button) {
+  position: absolute;
+  top: 4px;
+  right: -20px;
+  cursor: pointer;
+  z-index: 10;
+  width: 28px;
+  height: 28px;
+  background-color: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white; 
+  font-size: 20px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.7); 
+  transition: background-color 0.3s ease;
+}
+
+:deep(.maplibregl-popup-close-button):hover {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+
+
 :deep(.popup-card-address) {
-  margin: 6px 0;
   font-size: 0.9rem;
   color: #666;
+  margin: 0 0 12px 0;
 }
+
 :deep(.popup-card-link) {
-  background-color: #125341;
+  align-self: flex-end;
+  background-color: #2d4834;
   color: white;
   border: none;
-  border-radius: 8px;
   padding: 8px 14px;
-  font-size: 0.9rem;
+  border-radius: 24px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 2px 6px rgba(255,64,129,0.4);
 }
-:deep(.popup-card-link:hover) {
-  background-color: #0d3c2f;
+
+:deep(.popup-card-link):hover {
+  background-color: #385a41;
 }
 :deep(.maplibregl-popup-content) {
   min-width: 220px;

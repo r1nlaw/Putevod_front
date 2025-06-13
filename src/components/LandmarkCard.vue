@@ -139,7 +139,7 @@ defineProps({
   color: #888;
 }
 .landmark-action.remove {
-  background: #ffeaea;
+  background: #fffdfd;
   color: #e57373;
 }
 .landmark-action.remove .action-icon {
@@ -149,6 +149,14 @@ defineProps({
   background: #e6f2ed;
   color: #125341;
 }
+.landmark-card.selected {
+  background-color: #f0f0f0; 
+  box-shadow: 0 4px 16px rgba(18, 83, 65, 0.12);
+}
+
+
+
+
 @media (max-width: 600px) {
   .landmark-card {
     min-width: 90vw;
