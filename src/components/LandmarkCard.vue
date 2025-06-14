@@ -1,33 +1,58 @@
 <template>
   <div class="landmark-card" :class="{ selected }">
-        <img :src="image" class="landmark-image" alt="Фото" />
-        <div class="landmark-content">
-        <div class="landmark-title">{{ title }}</div>
-        <div class="landmark-address">{{ address }}</div>
-        <div class="landmark-weather">
-            <span class="weather-dot"></span>
-            Ясно, 25°C
+    <img :src="image" class="landmark-image" alt="Фото" />
+    <div class="landmark-content">
+      <div class="landmark-title">{{ title }}</div>
+
+      <div class="landmark-address">
+        <span>{{ displayAddress }}</span>
+        <span 
+          v-if="isTruncated" 
+          class="address-toggle" 
+          @click="showFull = !showFull"
+        >
+          {{ showFull ? ' (Скрыть)' : '...' }}
+        </span>
+      </div>
+
+      <div class="landmark-weather">
+        <span class="weather-dot"></span>
+        Ясно, 25°C
+      </div>
+
+      <div class="landmark-footer">
+        <div class="landmark-stats">
+          <span class="stat">
+            <img class="icon-img" :src="likeIcon" alt="like" />
+            {{ likes }}
+          </span>
+          <span class="stat">
+            <img class="icon-img" :src="reviewIcon" alt="comment" />
+            {{ comments }}
+          </span>
         </div>
-        <div class="landmark-footer">
-            <div class="landmark-stats">
-            <span class="stat"><i class="icon-heart"></i>{{ likes }}</span>
-            <span class="stat"><i class="icon-comment"></i>{{ comments }}</span>
-            </div>
-            <button
-            class="landmark-action"
-            :class="{ remove: selected }"
-            @click="$emit('toggle', id)"
-            >
-            {{ selected ? 'Убрать' : 'Добавить' }}
-            <span class="action-icon">A<sub>2</sub>B</span>
-            </button>
-        </div>
-        </div>
+        <button
+          class="landmark-action"
+          :class="{ remove: selected }"
+          @click="$emit('toggle', id)"
+        >
+          {{ selected ? 'Убрать' : 'Добавить' }}
+          <span class="action-icon">
+            <img class="action-icon-img" :src="routes" alt="routes" />
+          </span>
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-defineProps({
+import { ref, computed } from 'vue'
+import routes from '@/assets/icons/routes.png'
+import likeIcon from '@/assets/icons/like.png'
+import reviewIcon from '@/assets/icons/review.png'
+
+const props = defineProps({
   id: [String, Number],
   image: String,
   title: String,
@@ -35,13 +60,38 @@ defineProps({
   likes: Number,
   comments: Number,
   selected: Boolean
-});
+})
+
+const showFull = ref(false)
+
+const isTruncated = computed(() => props.address.length > 30)
+
+const displayAddress = computed(() => {
+  if (showFull.value || props.address.length <= 30) {
+    return props.address
+  }
+
+  const truncated = props.address.slice(0, 30)
+  const lastSpaceIndex = truncated.lastIndexOf(' ')
+
+  if (lastSpaceIndex === -1) {
+    return truncated + '...'
+  }
+
+  return truncated.slice(0, lastSpaceIndex)
+})
 </script>
 
 <style scoped>
+.action-icon-img,
+.icon-img {
+  width: 18px;
+  height: 18px;
+}
+
 .landmark-card {
   background: #fff;
-  border-radius: 24px;
+  border-radius: 35px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.06);
   overflow: hidden;
   display: flex;
@@ -56,10 +106,11 @@ defineProps({
 }
 .landmark-image {
   width: 100%;
-  height: 160px;
+  height: 240px;
+  padding: 10px;
+  border: 1px solid #f7f7f7;
   object-fit: cover;
-  border-top-left-radius: 24px;
-  border-top-right-radius: 24px;
+  border-radius: 35px;
 }
 .landmark-content {
   padding: 18px 18px 14px 18px;
@@ -69,18 +120,26 @@ defineProps({
 }
 .landmark-title {
   font-size: 1.1rem;
-  color: #000000a8;
+  color: #1d1d1d;
   font-weight: 700;
   margin-bottom: 2px;
 }
 .landmark-address {
   font-size: 0.98rem;
-  color: #666;
+  color: #1d1d1d;
   margin-bottom: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.address-toggle {
+  color: #1a73e8;
+  cursor: pointer;
+  user-select: none;
 }
 .landmark-weather {
   font-size: 0.95rem;
-  color: #888;
+  color: #595959;
   margin-bottom: 12px;
   display: flex;
   align-items: center;
@@ -110,15 +169,6 @@ defineProps({
   color: #888;
   font-size: 1rem;
 }
-.icon-heart::before {
-  content: '♥';
-  color: #e57373;
-  font-size: 1.1em;
-}
-.icon-comment::before {
-  content: '💬';
-  font-size: 1.1em;
-}
 .landmark-action {
   background: #f3f3f3;
   border: none;
@@ -140,7 +190,7 @@ defineProps({
 }
 .landmark-action.remove {
   background: #fffdfd;
-  color: #e57373;
+  color: #954848;
 }
 .landmark-action.remove .action-icon {
   color: #e57373;
@@ -153,9 +203,6 @@ defineProps({
   background-color: #f0f0f0; 
   box-shadow: 0 4px 16px rgba(18, 83, 65, 0.12);
 }
-
-
-
 
 @media (max-width: 600px) {
   .landmark-card {
@@ -172,4 +219,4 @@ defineProps({
     padding: 12px 10px 10px 10px;
   }
 }
-</style> 
+</style>

@@ -9,8 +9,7 @@
     <div v-show="isMapVisible" id="map" style="z-index: 0;"></div>
 
     <button class="map-button" @click="toggleMap">
-      <img src="@/assets/icons/map-pin.png" alt="Pin" />
-      {{ isMapExpanded ? 'Уменьшить карту' : isMapVisible ? 'Увеличить карту' : 'Раскрыть карту' }}
+      <img :src="mapToggleIcon" alt="Toggle Map" />
     </button>
   </div>
 </template>
@@ -18,8 +17,10 @@
 <script setup>
 import { ref, onMounted, nextTick, onBeforeUnmount } from 'vue';
 import maplibregl from 'maplibre-gl';
+import expandIcon from '@/assets/icons/expand.png';
+import collapseIcon from '@/assets/icons/collapse.png';
 import 'maplibre-gl/dist/maplibre-gl.css';
-
+import { computed } from 'vue';
 const props = defineProps({ sidebarOpen: Boolean });
 const map_style = import.meta.env.VITE_MAP_STYLE_URL;
 const isMapVisible = ref(true);
@@ -390,6 +391,10 @@ const toggleMap = () => {
     });
   }
 };
+
+const mapToggleIcon = computed(() => {
+  return isMapExpanded.value ? collapseIcon : expandIcon;
+});
 
 async function getLandmarksByIDs(points) {
   const url = `${domain}/api/getLandmarks`;

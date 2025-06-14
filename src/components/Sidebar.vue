@@ -1,36 +1,24 @@
 <template>
   <div :class="['sidebar-wrapper', { open: modelValue }]">
-
     <div class="sidebar-header">
       <span class="sidebar-title">Разделы</span>
       <button class="sidebar-back" title="Назад" @click="$emit('update:modelValue', false)">&#8592;</button>
     </div>
+
     <ul class="sidebar-nav">
-      <li class="sidebar-item sidebar-item--active">
-        <span class="sidebar-icon">🏛️</span>
-        <span>Достопримечательности</span>
-      </li>
-      <li class="sidebar-item">
-        <span class="sidebar-icon">🔤</span>
-        <span>Маршруты</span>
-      </li>
-      <li class="sidebar-item">
-        <span class="sidebar-icon">#</span>
-        <span>Лента</span>
-      </li>
-      <li class="sidebar-item">
-        <span class="sidebar-icon">🔥</span>
-        <span>Мероприятия</span>
-      </li>
-      <li class="sidebar-item">
-        <span class="sidebar-icon">🎯</span>
-        <span>Испытания</span>
-      </li>
-      <li class="sidebar-item">
-        <span class="sidebar-icon">🗺️</span>
-        <span>Путеводитель</span>
+      <li
+        v-for="(item, index) in menuItems"
+        :key="item.label"
+        :class="['sidebar-item', { 'sidebar-item--active': activeIndex === index }]"
+        @click="activeIndex = index"
+      >
+        <span class="sidebar-icon">
+          <img :src="item.icon" :alt="item.label" />
+        </span>
+        <span>{{ item.label }}</span>
       </li>
     </ul>
+
     <button class="menu-toggle" @click="$emit('update:modelValue', !modelValue)">
       <span v-if="modelValue">&#10005;</span>
       <span v-else>&#9776;</span>
@@ -39,13 +27,36 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
+import challenges from '@/assets/icons/challenges.png'
+import events from '@/assets/icons/events.png'
+import feed from '@/assets/icons/feed.png'
+import landmarks from '@/assets/icons/landmarks.png'
+import navmap from '@/assets/icons/navmap.png'
+import routes from '@/assets/icons/routes.png'
+
 defineProps({
   modelValue: Boolean
 })
 defineEmits(['update:modelValue'])
+
+const activeIndex = ref(0)
+
+const menuItems = [
+  { label: 'Достопримечательности', icon: landmarks },
+  { label: 'Маршруты', icon: routes },
+  { label: 'Лента', icon: feed },
+  { label: 'Мероприятия', icon: events },
+  { label: 'Испытания', icon: challenges },
+  { label: 'Путеводитель', icon: navmap }
+]
 </script>
 
 <style scoped>
+.sidebar-icon img {
+  width: 22px;
+  height: 22px;
+}
 .sidebar-header {
   display: flex;
   align-items: center;
@@ -55,7 +66,7 @@ defineEmits(['update:modelValue'])
 }
 .sidebar-title {
   font-size: 20px;
-  color: #000000a8;
+  color: #1d1d1d;
   font-weight: 700;
 }
 .sidebar-back {
@@ -85,8 +96,8 @@ defineEmits(['update:modelValue'])
 .sidebar-wrapper {
   z-index: 1;
   position: relative;
-  left: 45px;
-  top: 100px;
+  left: 30px;
+  top: 110px;
   width: 0;
   height: 82vh;
   overflow-y: hidden;
@@ -132,7 +143,7 @@ defineEmits(['update:modelValue'])
   align-items: center;
   gap: 10px;
   font-size: 15px;
-  padding: 6px 16px;
+  padding: 6px 25px;
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.15s;
@@ -145,7 +156,14 @@ defineEmits(['update:modelValue'])
 .sidebar-item--active {
   background: #ededed;
   font-weight: 600;
+  padding-left: 15px;
+  padding-right: 24px;
+  margin-left: 8px;
+  margin-right: 8px;
+  border-radius: 8px;
 }
+
+
 .sidebar-icon {
   font-size: 18px;
   width: 22px;

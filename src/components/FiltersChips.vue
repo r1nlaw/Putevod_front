@@ -100,6 +100,7 @@ function toggleChip(label) {
   transition: background 0.15s, box-shadow 0.15s, border-color 0.15s;
   box-shadow: none;
   outline: none;
+  font-family: "Montserrat", sans-serif;
 }
 .chip:hover,
 .chip:focus {

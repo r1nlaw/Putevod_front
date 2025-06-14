@@ -77,6 +77,7 @@ onMounted(() => {
     margin: 0 auto;
     max-width: 1750px;
     transition: margin-left 0.3s;
+    font-family: "Montserrat", sans-serif;
   }
 
   .accordion.with-sidebar {
