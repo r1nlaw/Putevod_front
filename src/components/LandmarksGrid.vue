@@ -15,7 +15,8 @@
 
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import LandmarkCard from './LandmarkCard.vue';
 
 const props = defineProps({ sidebarOpen: Boolean });
@@ -24,8 +25,10 @@ const places = ref([]);
 const isLoading = ref(false);
 const noMoreData = ref(false);
 const currentPage = ref(1);
-const selectedCategories = ref([]); // если фильтры нужны, передавайте как пропс
+const selectedCategories = ref([]);
 const selectedIds = ref([]);
+
+const route = useRoute();
 
 async function loadLandmark(categories = selectedCategories.value) {
   if (isLoading.value || noMoreData.value) return;
@@ -36,6 +39,7 @@ async function loadLandmark(categories = selectedCategories.value) {
   let url = `${domain}/api/landmark?page=${currentPage.value}`;
 
   if (categories.length > 0) {
+    // Формируем строку параметров. Если сервер ожидает category=cat1&category=cat2 — ок, иначе подкорректируйте
     url += `&${categories.map(cat => `category=${encodeURIComponent(cat)}`).join('&')}`;
   }
 
@@ -84,8 +88,21 @@ async function loadLandmark(categories = selectedCategories.value) {
   }
 }
 
+// Корректно считываем категории из URL (учитывая, что route.query.categories может быть массивом или строкой)
 onMounted(() => {
+  const cats = route.query.categories;
+  if (cats) {
+    if (Array.isArray(cats)) {
+      selectedCategories.value = cats;
+    } else {
+      selectedCategories.value = cats.split(',');
+    }
+  }
+
+  currentPage.value = 1;
+  noMoreData.value = false;
   loadLandmark();
+
   window.addEventListener('scroll', handleScroll);
 });
 
@@ -109,6 +126,24 @@ function toggleSelect(id) {
     selectedIds.value.push(id);
   }
 }
+
+watch(
+  () => route.query.categories,
+  (newCategories) => {
+    if (newCategories) {
+      if (Array.isArray(newCategories)) {
+        selectedCategories.value = newCategories;
+      } else {
+        selectedCategories.value = newCategories.split(',');
+      }
+    } else {
+      selectedCategories.value = [];
+    }
+    currentPage.value = 1;
+    noMoreData.value = false;
+    loadLandmark();
+  }
+);
 </script>
 
 <style scoped>

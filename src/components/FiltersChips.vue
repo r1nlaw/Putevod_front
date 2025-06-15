@@ -25,8 +25,6 @@ import { ref } from 'vue'
 import zamkiIcon from '@/assets/emoji/zamki.png'
 import religionIcon from '@/assets/emoji/religion.png'
 import museumIcon from '@/assets/emoji/museum.png'
-import cryptIcon from '@/assets/emoji/crypt.png'
-import zooIcon from '@/assets/emoji/zoo.png'
 import parkIcon from '@/assets/emoji/park.png'
 import natureIcon from '@/assets/emoji/nature.png'
 
@@ -40,7 +38,13 @@ import scienceIcon from '@/assets/emoji/science.png'
 import theatreIcon from '@/assets/emoji/theatre.png'
 import unusualIcon from '@/assets/emoji/unusual.png'
 
-const chips = [
+import { useRoute, useRouter } from 'vue-router'
+
+const route = useRoute()
+const router = useRouter()
+
+
+const chips = ref([
   { emoji: zamkiIcon, label: 'Храм', className: 'filter-gray' },
   { emoji: religionIcon, label: 'Религиозное', className: 'filter-green' },
   { emoji: museumIcon, label: 'Музеи', className: 'filter-museam' },
@@ -55,7 +59,7 @@ const chips = [
   { emoji: artobjectIcon, label: 'Арт-объект', className: 'filter-white' },
   { emoji: fountainIcon, label: 'Фонтаны', className: 'filter-blue-fountain' },
   { emoji: scienceIcon, label: 'Наука', className: 'filter-gold' },
-]
+])
 
 const selectedChips = ref([])
 
@@ -67,7 +71,19 @@ function toggleChip(label) {
   } else {
     selectedChips.value.splice(index, 1)
   }
+
+  const query = { ...route.query }
+
+  if (selectedChips.value.length > 0) {
+    query.categories = selectedChips.value.join(',')
+  } else {
+    delete query.categories
+  }
+
+  router.replace({ path: '/route', query })
 }
+
+
 </script>
 
 <style scoped>
