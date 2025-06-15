@@ -39,8 +39,7 @@ async function loadLandmark(categories = selectedCategories.value) {
   let url = `${domain}/api/landmark?page=${currentPage.value}`;
 
   if (categories.length > 0) {
-    // Формируем строку параметров. Если сервер ожидает category=cat1&category=cat2 — ок, иначе подкорректируйте
-    url += `&${categories.map(cat => `category=${encodeURIComponent(cat)}`).join('&')}`;
+    url += '&' + categories.map(cat => `category=${encodeURIComponent(cat)}`).join('&');
   }
 
   try {
@@ -88,7 +87,7 @@ async function loadLandmark(categories = selectedCategories.value) {
   }
 }
 
-// Корректно считываем категории из URL (учитывая, что route.query.categories может быть массивом или строкой)
+// Считываем категории из URL (если массив или строка)
 onMounted(() => {
   const cats = route.query.categories;
   if (cats) {
@@ -97,6 +96,8 @@ onMounted(() => {
     } else {
       selectedCategories.value = cats.split(',');
     }
+  } else {
+    selectedCategories.value = [];
   }
 
   currentPage.value = 1;
