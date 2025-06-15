@@ -15,29 +15,40 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, onBeforeUnmount } from 'vue';
+import { ref, onMounted, nextTick, onBeforeUnmount, computed  } from 'vue';
 import maplibregl from 'maplibre-gl';
 import expandIcon from '@/assets/icons/expand.png';
 import collapseIcon from '@/assets/icons/collapse.png';
+import routes from '@/assets/icons/routes.png';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { computed } from 'vue';
+import { useRouter } from 'vue-router';
+
 const props = defineProps({ sidebarOpen: Boolean });
 const map_style = import.meta.env.VITE_MAP_STYLE_URL;
+const domain = import.meta.env.VITE_BACKEND_URL;
+
 const isMapVisible = ref(true);
 const isMapExpanded = ref(false);
-const domain = import.meta.env.VITE_BACKEND_URL;
+const mapHeight = ref(500);
+const isMobile = ref(window.innerWidth <= 768);
+
 const geojson = { type: 'FeatureCollection', features: [] };
 let map = null;
-const mapHeight = ref(500); // уменьшенная высота по умолчанию
+
 const routeSourceId = 'route';
-const isMobile = ref(window.innerWidth <= 768);
 
 const markers = ref({});
 const isRouting = ref(false);
 const selectedRoutePoints = ref([]);
-import { useRouter } from 'vue-router';
+
 const router = useRouter();
 
+
+const mapToggleIcon = computed(() => (isMapExpanded.value ? collapseIcon : expandIcon));
+
+function toggleMap() {
+  isMapExpanded.value = !isMapExpanded.value;
+}
 const loadOptimizedImage = async (url, targetWidth) => {
   return new Promise((resolve) => {
     const img = new Image();
@@ -71,14 +82,12 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
     return;
   }
 
-  const isMobile = window.innerWidth <= 768;
-  const markerSize = isMobile ? 150 : 100;
-
+  const markerSize = isMobile.value ? 150 : 100;
   let facilities = [];
 
   try {
     if (selectedIds.length > 0) {
-      // Загружаем достопримечательности по ID
+      // Загрузка достопримечательностей по ID
       const response = await fetch(`${domain}/api/getLandmarks`, {
         method: 'POST',
         body: JSON.stringify(selectedIds),
@@ -87,7 +96,7 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
       if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
       facilities = await response.json();
     } else {
-      // Загружаем достопримечательности по bounds
+      // Загрузка достопримечательностей по bounds карты
       const bounds = targetMap.getBounds().toArray();
       const response = await fetch(`${domain}/api/facilities`, {
         method: 'POST',
@@ -106,7 +115,7 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
     const newFeatures = await Promise.all(facilities.map(async facility => {
       const isSelected = selectedIds.includes(facility.id);
       const imageUrl = facility.image_path
-        ? `${import.meta.env.VITE_BACKEND_URL}/images/${facility.image_path}?width=${markerSize}`
+        ? `${domain}/images/${facility.image_path}?width=${markerSize}`
         : null;
 
       return {
@@ -141,12 +150,12 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
       id: 'unclustered-point',
       type: 'symbol',
       source: 'markers',
-      filter: selectedIds.length > 0 
+      filter: selectedIds.length > 0
         ? ['all', ['!', ['has', 'point_count']], ['==', ['get', 'isSelected'], true]]
         : ['!', ['has', 'point_count']],
       layout: {
         'icon-image': ['coalesce', ['get', 'markerImage'], 'default-marker'],
-        'icon-size': isMobile ? 0.6 : 0.6,
+        'icon-size': isMobile.value ? 0.6 : 0.6,
         'icon-allow-overlap': true,
         'icon-anchor': 'bottom',
         'icon-padding': 10
@@ -181,34 +190,37 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
   }
 };
 
-const hideAllPoints = () => {
-  if (map) {
-    Object.values(markers.value).forEach(marker => {
-      if (marker && map.hasLayer(marker)) {
-        map.removeLayer(marker);
-      }
-    });
-    markers.value = {};
-  }
-};
-
 const showPopup = (feature, targetMap) => {
   const { geometry, properties } = feature;
   const { name, translated_name, image, address } = properties;
 
-const popupHTML = `
-  <div class="popup-card">
-    ${image ? `<img src="${image}" alt="${name}" class="popup-card-image" />` : ''}
-    <div class="popup-card-body">
-      <h3 class="popup-card-title">${name || 'Без названия'}</h3>
-      ${address ? `<p class="popup-card-address">${address}</p>` : ''}
-      <div style="margin-top: 10px; text-align: right;">
-        <button class="popup-card-link" data-name="${translated_name || name}">Подробнее</button>
+  const truncateAddress = (addr, maxLen) => {
+    if (!addr) return '';
+    return addr.length > maxLen ? addr.slice(0, maxLen) + '...' : addr;
+  };
+
+  const popupHTML = `
+    <div class="popup-card">
+      ${image ? `<img src="${image}" alt="${name}" class="popup-card-image" />` : ''}
+      <div class="popup-card-body">
+        <h3 class="popup-card-title">${name || 'Без названия'}</h3>
+        ${address ? `
+          <p class="popup-card-address">
+            <p class="popup-card-address">${address}</p>
+          </p>` : ''}
+        <div style="margin-top:10px; text-align: right; display: flex; justify-content: flex-end; gap: 10px;">
+          <button
+            class="popup-add-btn landmark-action ${selectedRoutePoints.value.includes(properties.id) ? 'remove' : ''}"
+            data-id="${properties.id}"
+          >
+            ${selectedRoutePoints.value.includes(properties.id) ? 'Убрать' : 'Добавить'}
+            ${!selectedRoutePoints.value.includes(properties.id) ? `<img class="action-icon-img" src="${routes}" alt="routes" />` : ''}
+          </button>
+          <button class="popup-card-link landmark-action" data-name="${translated_name || name}">Подробнее</button>
+        </div>
       </div>
     </div>
-  </div>
-`;
-
+  `;
 
   const popup = new maplibregl.Popup({ closeOnClick: true, className: 'custom-popup', maxWidth: '300px' })
     .setLngLat(geometry.coordinates)
@@ -216,17 +228,33 @@ const popupHTML = `
     .addTo(targetMap);
 
   setTimeout(() => {
-    const button = document.querySelector('.popup-card-link');
-    if (button) {
-      button.addEventListener('click', () => {
-        const name = button.getAttribute('data-name');
-        if (name) {
-          router.push(`/landmark/${encodeURIComponent(name)}`);
+    const btn = popup.getElement().querySelector('.popup-card-link');
+    if (btn) {
+      btn.addEventListener('click', () => {
+        const n = btn.getAttribute('data-name');
+        if (n) {
+          router.push(`/landmark/${encodeURIComponent(n)}`);
           popup.remove();
         }
       });
     }
-  }, 0);
+    const addBtn = popup.getElement().querySelector('.popup-add-btn');
+    if (addBtn) {
+      addBtn.addEventListener('click', () => {
+        const id = parseInt(addBtn.getAttribute('data-id'));
+        if (isNaN(id)) return;
+
+        const index = selectedRoutePoints.value.indexOf(id);
+        if (index === -1) {
+          selectedRoutePoints.value.push(id);
+          addBtn.textContent = 'Убрать';
+        } else {
+          selectedRoutePoints.value.splice(index, 1);
+          addBtn.textContent = 'Добавить';
+        }
+      });
+    }
+  });
 };
 
 onMounted(async () => {
@@ -255,19 +283,19 @@ onMounted(async () => {
         'circle-color': [
           'step',
           ['get', 'point_count'],
-          '#51bbd6',
+          '#61dafb',
           10,
-          '#f1f075',
-          750,
-          '#f28cb1'
+          '#24a5e6',
+          30,
+          '#0077b6'
         ],
         'circle-radius': [
           'step',
           ['get', 'point_count'],
-          35,
-          100,
+          15,
+          10,
           20,
-          250,
+          30,
           25
         ]
       }
@@ -280,208 +308,53 @@ onMounted(async () => {
       filter: ['has', 'point_count'],
       layout: {
         'text-field': '{point_count_abbreviated}',
-        'text-font': ['Noto Sans Regular', 'Arial Unicode MS Regular'],
-        'text-size': 10
-      },
-      paint: {
-        'text-color': '#ffffff'
-      }
-    });
-
-    map.on('click', 'clusters', (e) => {
-      const features = map.queryRenderedFeatures(e.point, {
-        layers: ['clusters']
-      });
-      const clusterId = features[0].properties.cluster_id;
-      map.getSource('markers').getClusterExpansionZoom(
-        clusterId,
-        (err, zoom) => {
-          if (err) return;
-
-          map.easeTo({
-            center: features[0].geometry.coordinates,
-            zoom: zoom
-          });
-        }
-      );
-    });
-
-    map.addSource(routeSourceId, {
-      type: 'geojson',
-      data: { type: 'FeatureCollection', features: [] }
-    });
-
-    map.addLayer({
-      id: 'route-line',
-      type: 'line',
-      source: routeSourceId,
-      paint: {
-        'line-color': '#ff0090',
-        'line-width': [
-          'interpolate',
-          ['linear'],
-          ['zoom'],
-          10, 3,
-          15, 5,
-          20, 8
-        ],
-        'line-opacity': 0.8,
-        'line-blur': 0.5,
-        'line-dasharray': [2, 2]
+        'text-font': ['Roboto Bold', 'Arial Unicode MS Bold'],
+        'text-size': 14
       }
     });
 
     await loadFacilities(map);
 
+    map.on('click', 'clusters', (e) => {
+      const features = map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
+      const clusterId = features[0].properties.cluster_id;
+      map.getSource('markers').getClusterExpansionZoom(clusterId, (err, zoom) => {
+        if (err) return;
+        map.easeTo({
+          center: features[0].geometry.coordinates,
+          zoom: zoom
+        });
+      });
+    });
+
     map.on('click', 'unclustered-point', (e) => {
-      if (!e.features?.[0]) return;
+      if (e.features.length === 0) return;
       showPopup(e.features[0], map);
     });
 
-    map.on('mouseenter', ['clusters', 'unclustered-point'], () => {
+    map.on('mouseenter', 'clusters', () => {
       map.getCanvas().style.cursor = 'pointer';
     });
-
-    map.on('mouseleave', ['clusters', 'unclustered-point'], () => {
+    map.on('mouseleave', 'clusters', () => {
       map.getCanvas().style.cursor = '';
+    });
+
+    map.on('moveend', async () => {
+      if (!isRouting.value) {
+        await loadFacilities(map, []);
+      }
     });
   });
 
-  map.on('moveend', () => {
-    if (selectedRoutePoints.value.length > 0) return;
-    loadFacilities(map);
-  });
-  map.on('error', console.error);
-
-  // Add resize listener
   window.addEventListener('resize', () => {
     isMobile.value = window.innerWidth <= 768;
   });
 });
 
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', () => {
-    isMobile.value = window.innerWidth <= 768;
-  });
-});
-
-function resetRoute() {
-  selectedRoutePoints.value = [];
-  if (map.getSource(routeSourceId)) {
-    map.getSource(routeSourceId).setData({
-      type: 'Feature',
-      geometry: { type: 'LineString', coordinates: [] }
-    });
+  if (map) {
+    map.remove();
   }
-  loadFacilities(map);
-}
-const toggleMap = () => {
-  if (!isMapVisible.value) {
-    isMapVisible.value = true;
-    isMapExpanded.value = true;
-    mapHeight.value = isMobile.value ? 600 : 800;
-    nextTick(() => {
-      map?.resize();
-    });
-  } else {
-    isMapExpanded.value = !isMapExpanded.value;
-    mapHeight.value = isMapExpanded.value ? (isMobile.value ? 600 : 800) : 500;
-    nextTick(() => {
-      map?.resize();
-    });
-  }
-};
-
-const mapToggleIcon = computed(() => {
-  return isMapExpanded.value ? collapseIcon : expandIcon;
-});
-
-async function getLandmarksByIDs(points) {
-  const url = `${domain}/api/getLandmarks`;
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      body: JSON.stringify(points),
-      headers: { 'Content-Type': 'application/json' }
-    });
-
-    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-    return await response.json();
-  } catch (error) {
-    console.error('Fetch error:', error);
-    return null;
-  }
-}
-
-async function RouteMaker(points) {
-  isRouting.value = true;
-  selectedRoutePoints.value = points; 
-  
-  try {
-    if (map.getSource(routeSourceId)) {
-      map.getSource(routeSourceId).setData({
-        type: 'Feature',
-        geometry: { type: 'LineString', coordinates: [] }
-      });
-    }
-    
-    await loadFacilities(map, points);
-    const landmarks = await getLandmarksByIDs(points);
-    if (landmarks) await getRoute(landmarks);
-  } catch (error) {
-    console.error('Error in RouteMaker:', error);
-  } finally {
-    isRouting.value = false;
-  }
-}
-
-function getRoute(coords) {
-  return new Promise((resolve, reject) => {
-    try {
-      let strCoord = "";
-      for (let i = 0; i < coords.length; i++) {
-        strCoord += `${i===0?"":";"}${coords[i].location.lng},${coords[i].location.lat}`;
-      }
-
-      const url = `https://router.project-osrm.org/route/v1/driving/${strCoord}?overview=full&geometries=geojson`;
-
-      fetch(url)
-        .then(res => {
-          if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-          return res.json();
-        })
-        .then(data => {
-          if (data.routes && data.routes[0]) {
-            const route = data.routes[0].geometry;
-            map.getSource(routeSourceId).setData({
-              type: 'Feature',
-              geometry: route
-            });
-            if (modalMap.value && modalMap.value.getSource(routeSourceId)) {
-              modalMap.value.getSource(routeSourceId).setData({
-                type: 'Feature',
-                geometry: route
-              });
-            }
-            resolve();
-          }
-        })
-        .catch(err => {
-          console.error('Ошибка маршрута:', err);
-          reject(err);
-        });
-    } catch (error) {
-      console.error('Error in getRoute:', error);
-      reject(error);
-    }
-  });
-}
-
-defineExpose({
-  RouteMaker,
-  hideAllPoints,
-  loadFacilities,
-  resetRoute,
 });
 </script>
 
@@ -537,7 +410,7 @@ defineExpose({
   z-index: 10;
   background: #fff;
   border: 1px solid #ccc;
-  padding: 8px 16px;
+  padding: 8px 10px;
   border-radius: 15px;
   cursor: pointer;
   display: flex;
@@ -560,10 +433,10 @@ defineExpose({
 :deep(.popup-card) {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: #fff;
-  border-radius: 12px;
+  border-radius: 25px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.2);
   overflow: hidden;
-  width: 250px;
+  width: 280px;
   max-width: 90vw;
   color: #333;
   display: flex;
@@ -577,9 +450,17 @@ defineExpose({
 :deep(.popup-card-image) {
   width: 100%;
   height: 160px;
+  padding: 10px;
   object-fit: cover;
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
+  border-radius: 25px;
+}
+
+:deep(.popup-card-link .landmark-action) {
+  font-weight: 100 !important; 
+  height: 30px;
+  padding: 0 10px;
+  font-size: 12px;
+  border-radius: 10px;
 }
 
 :deep(.popup-card-body) {
@@ -588,8 +469,7 @@ defineExpose({
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-
-  height: 50%; /* Остальная половина карточки */
+  height: 50%; 
 }
 
 :deep(.popup-card-title) {
@@ -598,11 +478,20 @@ defineExpose({
   margin: 0 0 8px 0;
   color: #222;
 }
+:deep(.action-icon-img) {
+  filter: brightness(0) invert(1);
+  width: 18px;
+  height: 18px;
+}
+:deep(.popup-add-btn) {
+  color: #fff !important;
+  background: #3d5a40 !important;
+}
 
 :deep(.maplibregl-popup-close-button) {
   position: absolute;
-  top: 4px;
-  right: -20px;
+  top: 15px;
+  right: -45px;
   cursor: pointer;
   z-index: 10;
   width: 28px;
@@ -627,7 +516,7 @@ defineExpose({
 :deep(.popup-card-address) {
   font-size: 0.9rem;
   color: #666;
-  margin: 0 0 12px 0;
+  margin: 0 0 1px 0;
 }
 
 :deep(.popup-card-link) {
@@ -636,11 +525,10 @@ defineExpose({
   color: white;
   border: none;
   padding: 8px 14px;
-  border-radius: 24px;
+  border-radius: 20px;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 400;
   transition: background-color 0.3s ease;
-  box-shadow: 0 2px 6px rgba(255,64,129,0.4);
 }
 
 :deep(.popup-card-link):hover {
@@ -660,6 +548,42 @@ defineExpose({
   box-shadow: none !important;
   border: none !important;
 }
+
+:deep(.landmark-action) {
+  background: #f3f3f3;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 1rem;
+  color: #222;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+
+:deep(.landmark-action .action-icon) {
+  font-weight: 700;
+  font-size: 1.1em;
+  margin-left: 2px;
+  color: #888;
+}
+
+:deep(.landmark-action.remove) {
+  background: #fffdfd;
+  color: #954848;
+}
+
+:deep(.landmark-action.remove .action-icon) {
+  color: #e57373;
+}
+
+:deep(.landmark-action:hover) {
+  background: #e6f2ed;
+  color: #125341;
+}
+
 
 @media (max-width: 900px) {
   .map-container.expanded {

@@ -125,7 +125,7 @@ function toggleChip(label) {
 
 .chip--selected {
   border: 1px solid #569464;
-  background-color: rgba(43, 75, 51, 0.507); /* лёгкий зеленоватый фон */
+  background-color: rgba(43, 75, 51, 0.507); 
   box-shadow: 0 0 8px 2px rgba(0, 0, 0, 0.1);
   filter: none;
   color: #222;
