@@ -45,19 +45,18 @@ const router = useRouter()
 
 
 const chips = ref([
-  { emoji: zamkiIcon, label: 'Храм', className: 'filter-gray' },
-  { emoji: religionIcon, label: 'Религиозное', className: 'filter-green' },
-  { emoji: museumIcon, label: 'Музеи', className: 'filter-museam' },
+  { emoji: religionIcon, label: 'Религия', className: 'filter-green' },
+  { emoji: museumIcon, label: 'Музей', className: 'filter-museam' },
   { emoji: architectureIcon, label: 'Архитектура', className: 'filter-brown' },
-  { emoji: monumentIcon, label: 'Памятники', className: 'filter-orange' },
-  { emoji: parkIcon, label: 'Парки', className: 'filter-green-nature' },
+  { emoji: monumentIcon, label: 'Памятник', className: 'filter-orange' },
+  { emoji: parkIcon, label: 'Парк', className: 'filter-green-nature' },
   { emoji: natureIcon, label: 'Природа', className: 'filter-green-nature' },
   { emoji: theatreIcon, label: 'Театр', className: 'filter-pink' },
   { emoji: concerthallIcon, label: 'Концертный зал', className: 'filter-blue' },
   { emoji: unusualIcon, label: 'Необычное', className: 'filter-brown-cons' },
   { emoji: archaeologyIcon, label: 'Археология', className: 'filter-beige' },
   { emoji: artobjectIcon, label: 'Арт-объект', className: 'filter-white' },
-  { emoji: fountainIcon, label: 'Фонтаны', className: 'filter-blue-fountain' },
+  { emoji: fountainIcon, label: 'Фонтан', className: 'filter-blue-fountain' },
   { emoji: scienceIcon, label: 'Наука', className: 'filter-gold' },
 ])
 
