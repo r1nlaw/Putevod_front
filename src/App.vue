@@ -4,10 +4,14 @@
     <div class="content-row">
       <Sidebar v-model="sidebarOpen" />
       <main class="main-content" :class="{ 'with-sidebar': sidebarOpen }">
-        <MapView :sidebar-open="sidebarOpen" />
-        <FiltersAccordion :sidebar-open="sidebarOpen" />
-        <LandmarksGrid :sidebar-open="sidebarOpen" />
-        <!-- Ваш основной контент здесь -->
+        <router-view />
+        
+        <template v-if="showMainComponents">
+          <MapView :sidebar-open="sidebarOpen" />
+          <FiltersAccordion :sidebar-open="sidebarOpen" />
+          <LandmarksGrid :sidebar-open="sidebarOpen" />
+        </template>
+        
       </main>
       <button class="burger-btn" v-if="!sidebarOpen" @click="sidebarOpen = true">
         <span>&#9776;</span>
@@ -16,14 +20,20 @@
   </div>
 </template>
 
+
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import Header from './components/Header.vue'
 import Sidebar from './components/Sidebar.vue'
 import MapView from './components/MapView.vue'
 import FiltersAccordion from './components/FiltersAccordion.vue'
 import LandmarksGrid from './components/LandmarksGrid.vue'
 const sidebarOpen = ref(true)
+const route = useRoute()
+const showMainComponents = computed(() => {
+  return route.path !== '/profile'
+})
 </script>
 
 <style scoped>

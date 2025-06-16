@@ -6,7 +6,9 @@
       </div>
       <div class="header__logo-text">
         <div class="header__logo-subtitle">достопримечательности</div>
-        <div class="header__logo-title">путевод</div>
+        <router-link to="/" class="header__logo-title">
+          путевод
+        </router-link>
       </div>
     </div>
     <div class="header__center" :class="{ 'header__center--sidebar': sidebarOpen }">
@@ -27,10 +29,11 @@
           <img :src="messageIcon" alt="messages" />
         </button>
       </div>
-        <div class="header__avatar-wrapper">
-          <div class="header__avatar">A</div>
-          <button class="header__arrow-btn"><img :src="arrow" alt="arrow" /></button>
-        </div>
+      <router-link to="/profile" class="header__avatar-wrapper">
+        <div class="header__avatar">A</div>
+        <button class="header__arrow-btn"><img :src="arrow" alt="arrow" /></button>
+      </router-link>
+
       </div>
     </div>
   </header>
@@ -106,14 +109,18 @@ const props = defineProps({
   font-size: 32px;
   font-weight: 700;
   color: #2d4834;
+  background: #f7f7f7d5;
   margin-top: -7px;
   letter-spacing: -1px;
+  text-decoration: none;
+  cursor: pointer;
 }
 .header__logo-subtitle {
   font-size: 9px;
   color: #2d4834;
   opacity: 0.7;
   margin-top: -4px;
+  margin-left: 2px;
 }
 .header__center {
   display: flex;
