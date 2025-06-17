@@ -6,6 +6,7 @@
         :key="item.id"
         v-bind="item"
         :selected="selectedIds.includes(item.id)"
+        :sidebar-opened="sidebarOpen"
         @toggle="toggleSelect"
       />
     </transition-group>

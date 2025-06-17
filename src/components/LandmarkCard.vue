@@ -1,5 +1,5 @@
 <template>
-  <div class="landmark-card" :class="{ selected }">
+  <div class="landmark-card" :class="{ selected, 'wide-card': props.sidebarOpened }">
     <img :src="image" class="landmark-image" alt="Фото" />
     <div class="landmark-content">
       <div class="landmark-title">{{ title }}</div>
@@ -59,7 +59,8 @@ const props = defineProps({
   address: String,
   likes: Number,
   comments: Number,
-  selected: Boolean
+  selected: Boolean,
+  sidebarOpened: Boolean
 })
 
 const showFull = ref(false)
@@ -99,16 +100,23 @@ const displayAddress = computed(() => {
   min-width: 280px;
   max-width: 280px;
   min-height: 460px;
-  max-height: 490px;
+  max-height: 580px;
   margin: 0;
   transition: box-shadow 0.2s;
+  transition: width 0.3s ease;
 }
+.landmark-card.wide-card {
+  min-width: 300px;
+  max-width: 340px;
+}
+
 .landmark-card.selected {
   box-shadow: 0 4px 16px rgba(18,83,65,0.12);
 }
 .landmark-image {
   width: 100%;
-  height: 240px;
+  min-height: 240px;
+  max-height: 240px;
   padding: 5px;
   border: 1px solid #f7f7f7;
   object-fit: cover;
