@@ -151,9 +151,9 @@ watch(
 .landmarks-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 20px 20px;
+  gap: 5px 5px;
   margin: 0 auto;
-  padding: 35px 88px;
+  padding: 35px 0.5%;
   background: #fff;
   max-width: 1750px;
 }

@@ -100,7 +100,7 @@ function toggleChip(label) {
 .chips-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px 14px;
+  gap: 10px 10px;
 }
 .chip {
   display: flex;

@@ -63,12 +63,12 @@ const showMainComponents = computed(() => {
 }
 .burger-btn {
   position: fixed;
-  top: 110px;
-  left: 30px;
+  top: 115px;
+  left: 39px;
   background: #ffffffd5;
   color: #000000;
   border: none;
-  font-size: 2em;
+  font-size: 1.3em;
   cursor: pointer;
   border-radius: 8px;
   padding: 8px 12px;

@@ -1,8 +1,15 @@
 <template>
-  <div :class="['sidebar-wrapper', { open: modelValue }]">
+  <div :class="['sidebar-wrapper', { open: modelValue, collapsed: !modelValue }]">
     <div class="sidebar-header">
-      <span class="sidebar-title">Разделы</span>
-      <button class="sidebar-back" title="Назад" @click="$emit('update:modelValue', false)">&#8592;</button>
+      <span class="sidebar-title" v-show="modelValue">Разделы</span>
+      <button
+        class="sidebar-back"
+        title="Назад"
+        @click="$emit('update:modelValue', false)"
+        v-show="modelValue"
+      >
+        &#8592;
+      </button>
     </div>
 
     <ul class="sidebar-nav">
@@ -10,12 +17,12 @@
         v-for="(item, index) in menuItems"
         :key="item.label"
         :class="['sidebar-item', { 'sidebar-item--active': activeIndex === index }]"
-        @click="activeIndex = index"
+        @click="handleClick(item.label, index)"
       >
         <span class="sidebar-icon">
           <img :src="item.icon" :alt="item.label" />
         </span>
-        <span>{{ item.label }}</span>
+        <span v-show="modelValue">{{ item.label }}</span>
       </li>
     </ul>
 
@@ -26,6 +33,7 @@
   </div>
 </template>
 
+
 <script setup>
 import { ref } from 'vue'
 import challenges from '@/assets/icons/challenges.png'
@@ -34,6 +42,9 @@ import feed from '@/assets/icons/feed.png'
 import landmarks from '@/assets/icons/landmarks.png'
 import navmap from '@/assets/icons/navmap.png'
 import routes from '@/assets/icons/routes.png'
+
+import { useRouter } from 'vue-router'
+const router = useRouter()
 
 defineProps({
   modelValue: Boolean
@@ -44,18 +55,33 @@ const activeIndex = ref(0)
 
 const menuItems = [
   { label: 'Достопримечательности', icon: landmarks },
+  { label: 'Профиль', icon: landmarks },
   { label: 'Маршруты', icon: routes },
   { label: 'Лента', icon: feed },
   { label: 'Мероприятия', icon: events },
   { label: 'Испытания', icon: challenges },
   { label: 'Путеводитель', icon: navmap }
 ]
+
+const handleClick = (label, index) => {
+  activeIndex.value = index
+
+  if (label === 'Профиль') {
+    router.push('/profile')
+  }
+  if (label === 'Достопримечательности') {
+    router.push('/')
+  }
+
+}
+
 </script>
 
 <style scoped>
 .sidebar-icon img {
   width: 22px;
   height: 22px;
+  min-width: 22px;
 }
 .sidebar-header {
   display: flex;
@@ -68,6 +94,7 @@ const menuItems = [
   font-size: 20px;
   color: #1d1d1d;
   font-weight: 700;
+  transition: opacity 0.3s;
 }
 .sidebar-back {
   background: #f7f7f7;
@@ -98,7 +125,7 @@ const menuItems = [
   position: relative;
   left: 30px;
   top: 110px;
-  width: 0;
+  width: 300px;
   height: 82vh;
   overflow-y: hidden;
   overflow-x: hidden;
@@ -115,6 +142,9 @@ const menuItems = [
 }
 .sidebar-wrapper.open {
   width: 300px;
+}
+.sidebar-wrapper.collapsed {
+  width: 60px; /* минимальная ширина для отображения иконок */
 }
 .menu-toggle {
   position: absolute;

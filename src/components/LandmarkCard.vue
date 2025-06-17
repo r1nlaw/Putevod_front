@@ -96,8 +96,10 @@ const displayAddress = computed(() => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  min-width: 290px;
-  max-width: 320px;
+  min-width: 280px;
+  max-width: 280px;
+  min-height: 460px;
+  max-height: 490px;
   margin: 0;
   transition: box-shadow 0.2s;
 }
@@ -107,7 +109,7 @@ const displayAddress = computed(() => {
 .landmark-image {
   width: 100%;
   height: 240px;
-  padding: 10px;
+  padding: 5px;
   border: 1px solid #f7f7f7;
   object-fit: cover;
   border-radius: 35px;
@@ -173,7 +175,7 @@ const displayAddress = computed(() => {
   background: #f3f3f3;
   border: none;
   border-radius: 18px;
-  padding: 7px 16px;
+  padding: 10px 16px;
   font-size: 1rem;
   color: #222;
   cursor: pointer;

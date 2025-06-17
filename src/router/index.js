@@ -6,7 +6,6 @@ const routes = [
   {
     path: '/route',
     name: 'Route',
-    component: FiltersChips
   },
   {
     path: '/profile',
