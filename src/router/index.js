@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import FiltersChips from '../components/FiltersChips.vue'
 import Profile from '../components/Profile.vue'
-
+import LandmarkPage from '@/components/LandmarkPage.vue'
 const routes = [
   {
     path: '/route',
@@ -11,6 +10,16 @@ const routes = [
     path: '/profile',
     name: 'Profile',
     component: Profile
+  },
+  {
+    path: '/landmark/:name',
+    name: 'Landmark',
+    component: LandmarkPage,
+    props: true,
+    meta: {
+      title: 'Достопримечательность Крыма',
+      description: 'Узнайте больше о достопримечательности Крыма: история, фото и маршрут на карте.'
+    }
   }
 ]
 

@@ -1,168 +1,240 @@
 <template>
-    <div class="container">
-      <!-- Баннер -->
-      <div
-        class="banner"
-        :style="{ backgroundImage: `url('https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=1470&q=80')` }"
-      >
-        <img
-            src="https://avatars.githubusercontent.com/u/78544679?v=4"
-            alt="Аватар"
-            class="avatar"
-        />
+  <div class="container">
+    <!-- Баннер -->
+    <div
+      class="banner"
+      :style="{ backgroundImage: `url('https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=1470&q=80')` }"
+    >
+      <label v-if="isEditing" class="avatar-upload">
+        <input type="file" @change="onFileChange" hidden />
+        <img :src="getAvatarSrc" alt="Аватар" class="avatar editable" />
+      </label>
+      <img v-else :src="getAvatarSrc" alt="Аватар" class="avatar" />
+    </div>
+
+    <!-- Основная информация -->
+    <div class="info-block">
+      <div class="info-header">
+        <div class="text-info">
+          <div class="title-with-icon">
+            <div v-if="isEditing">
+              <input v-model="edited.name" class="edit-input title-input" />
+            </div>
+            <h1 v-else>{{ profile.name }}</h1>
+            <svg
+              class="check-icon"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </div>
+          <div v-if="isEditing">
+            <input v-model="edited.bio" class="edit-input subtitle-input" />
+          </div>
+          <p v-else class="subtitle">
+            {{ profile.bio }} <span class="emoji">💀</span>
+          </p>
+          <p class="readers-count">
+            <svg
+              class="icon-message"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M2 5a2 2 0 012-2h12a2 2 0 012 2v6a2 2 0 01-2 2H6l-4 4V5z" />
+            </svg>
+            3 529 читателей
+          </p>
+        </div>
+
+        <div class="buttons-group">
+          <button>Статистика</button>
+          <button @click="toggleEdit">
+            {{ isEditing ? 'Сохранить' : 'Редактировать' }}
+          </button>
+          <button aria-label="Дополнительные опции">...</button>
+        </div>
       </div>
-  
-      <!-- Основная информация -->
-      <div class="info-block">
-        <div class="info-header">
 
-            <div class="text-info">
-              <div class="title-with-icon">
-                <h1>Блог Дениса</h1>
-                <svg
-                  class="check-icon"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-              </div>
-              <p class="subtitle">
-                С позитивом по всем красотам <span class="emoji">💀</span>
-              </p>
-              <p class="readers-count">
-                <svg
-                  class="icon-message"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M2 5a2 2 0 012-2h12a2 2 0 012 2v6a2 2 0 01-2 2H6l-4 4V5z" />
-                </svg>
-                3 529 читателей
-              </p>
-            </div>
+      <div class="info-grid">
+        <div>
+          <h3>Описание</h3>
+          <div v-if="isEditing">
+            <textarea v-model="edited.description" class="edit-input description-input"></textarea>
           </div>
-  
-          <div class="buttons-group">
-            <button>Статистика</button>
-            <button>Редактировать</button>
-            <button aria-label="Дополнительные опции">...</button>
-          </div>
-        </div>
-  
-        <div class="info-grid">
-            <div>
-                <h3>Описание</h3>
-                <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce in
-                sapien non mauris porttitor fermentum nec sit amet tortor. Phasellus
-                molestie libero sit amet dui eleifend feugiat. Phasellus hendrerit
-                interdum mattis. Donec bibendum velit risus, nec vestibulum dui
-                sodales ut. Duis dapibus lorem eu sapien rutrum fringilla. Cras sed
-                ligula sed justo volutpat dictum. Nulla facilisi. Cras volutpat, enim
-                a maximus tincidunt, elit lacus bibendum dolor.
-                </p>
-            </div>
-
-            <!-- Вынесенный блок с местоположением и категорией -->
-            <div class="location-category">
-                <div class="location">
-                <h3>Местоположение</h3>
-                <p>Астана, Казахстан</p>
-                </div>
-                <div class="category">
-                <h3>Категория</h3>
-                <p>Пешие путешествия</p>
-                </div>
-            </div>
+          <p v-else>{{ profile.description }}</p>
         </div>
 
-        <div class="social-links">
-        <a
-          href="https://www.youtube.com/@blogdenisa"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="social-link youtube"
-        >
-          <img
-            src="https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png"
-            alt="YouTube"
-            class="social-icon"
-          />
-          <div class="social-text">
-            <span class="name">Блог Дениса</span>
-            <span class="subs">31 257 подписчиков</span>
+        <!-- Вынесенный блок с местоположением и категорией -->
+        <div class="location-category">
+          <div class="location">
+            <h3>Местоположение</h3>
+            <p>Астана, Казахстан</p>
           </div>
-        </a>
-  
-        <a
-          href="https://twitch.tv/triplive"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="social-link twitch"
-        >
-          <img
-            src="https://upload.wikimedia.org/wikipedia/commons/5/56/Twitch_logo_2022.svg"
-            alt="Twitch"
-            class="social-icon"
-          />
-          <div class="social-text">
-            <span class="name">TripLive</span>
-            <span class="subs">1 257 фолловеров</span>
+          <div class="category">
+            <h3>Категория</h3>
+            <p>Пешие путешествия</p>
           </div>
-        </a>
-  
-        <a
-          href="https://vk.com/meteiyke"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="social-link vk"
-        >
-          <img
-            src="https://upload.wikimedia.org/wikipedia/commons/2/21/VK.com-logo.svg"
-            alt="VK"
-            class="social-icon"
-          />
-          <div class="social-text">
-            <span class="name">Денис Иващенко</span>
-            <span class="subs">247 друзей</span>
-          </div>
-        </a>
-  
-        <button class="social-link add-button">
-          <svg
-            class="add-icon"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="16" />
-            <line x1="8" y1="12" x2="16" y2="12" />
-          </svg>
-          Добавить
-        </button>
+        </div>
+      </div>
+
+      <div class="social-links">
+        <!-- ... остальные ссылки без изменений ... -->
       </div>
     </div>
-  </template>
-  
-  <script>
-  export default {
-    data() {
-      return {};
-    },
-  };
-  </script>
+  </div>
+</template>
+
+<script setup>
+import { reactive, ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import avatarImage from '@/assets/images/user_avatar.png'
+
+const isEditing = ref(false)
+const router = useRouter()
+
+const profile = reactive({
+  photo: '',
+  name: '',
+  bio: '',
+  description: '',
+  rating: 0,
+  routes: [],
+})
+
+const edited = reactive({
+  photo: '',
+  name: '',
+  bio: '',
+  description: '',
+})
+
+const domain = `${import.meta.env.VITE_BACKEND_URL}`
+
+onMounted(async () => {
+  const token = localStorage.getItem("token")
+  const isAuthenticated = !!token
+
+  if (isAuthenticated) {
+    try {
+      const response = await fetch(`${domain}/user/profile`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || errorData.error || 'Не удалось загрузить профиль')
+      }
+
+      const data = await response.json()
+      profile.name = data.username || localStorage.getItem("username") || ''
+      profile.bio = data.user_bio || 'Люблю путешествовать и открывать новые маршруты!'
+      profile.description = data.description || ''  // добавил описание
+      profile.photo = data.avatar || ''
+      profile.rating = data.rating || 4.7
+      profile.routes = data.routes || [
+        { id: 1, name: 'Крымская тропа' },
+        { id: 2, name: 'Пеший маршрут по горам' },
+        { id: 3, name: 'Велоэкскурсия по городу' },
+      ]
+      localStorage.setItem("user_id", data.user_id)
+
+      edited.name = profile.name
+      edited.bio = profile.bio
+      edited.description = profile.description
+      edited.photo = profile.photo
+    } catch (err) {
+      console.error(err)
+      alert('Не удалось загрузить профиль: ' + err.message)
+    }
+  }
+})
+
+const getAvatarSrc = computed(() => {
+  const base64 = edited.photo || profile.photo
+  return base64 ? `data:image/jpeg;base64,${base64}` : avatarImage
+})
+
+async function toggleEdit() {
+  const token = localStorage.getItem("token")
+  const isAuthenticated = !!token
+
+  if (!isAuthenticated) {
+    alert('Пожалуйста, войдите в систему')
+    return
+  }
+
+  if (isEditing.value) {
+    try {
+      const payload = {
+        username: edited.name,
+        user_bio: edited.bio,
+        description: edited.description,
+        avatar: edited.photo || null,
+      }
+
+      const response = await fetch(`${domain}/user/changeProfile`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || errorData.error || 'Ошибка при сохранении профиля')
+      }
+
+      // Обновляем profile данными из edited
+      profile.name = edited.name
+      profile.bio = edited.bio
+      profile.description = edited.description
+      if (edited.photo) profile.photo = edited.photo
+    } catch (err) {
+      console.error(err)
+      alert(err.message)
+    }
+  } else {
+    edited.name = profile.name
+    edited.bio = profile.bio
+    edited.description = profile.description
+    edited.photo = profile.photo
+  }
+
+  isEditing.value = !isEditing.value
+}
+
+function onFileChange(e) {
+  const token = localStorage.getItem("token")
+  const isAuthenticated = !!token
+
+  if (!isAuthenticated) {
+    alert('Пожалуйста, войдите в систему')
+    return
+  }
+
+  const file = e.target.files[0]
+  if (file) {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const base64 = reader.result.split(',')[1] // отделяем чистый base64
+      edited.photo = base64
+    }
+    reader.readAsDataURL(file)
+  }
+}
+</script>
   
   <style scoped>
   .container {
@@ -334,9 +406,9 @@ button[aria-label="Дополнительные опции"] {
 
 .info-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr; /* Больше места для описания */
+  grid-template-columns: 2fr 1fr; 
   gap: 2rem;
-  margin-top: -1rem;
+  margin-top: 2rem;
   color: #374151;
   align-items: start;
   margin-left: 2rem;

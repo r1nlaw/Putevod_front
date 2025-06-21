@@ -24,32 +24,49 @@
         </div>
 
         <div class="header__message">
+          <button class="header__button">
+            <img :src="messageIcon" alt="messages" />
+          </button>
+        </div>
 
-        <button class="header__button">
-          <img :src="messageIcon" alt="messages" />
-        </button>
-      </div>
-      <router-link to="/profile" class="header__avatar-wrapper">
-        <div class="header__avatar">A</div>
-        <button class="header__arrow-btn"><img :src="arrow" alt="arrow" /></button>
-      </router-link>
+        <!-- Новая кнопка регистрации -->
+        <button class="header__register-button" @click="openRegisterModal">Регистрация</button>
+        <RegisterModal ref="registerModal" @close="closeModal" />
+        <router-link to="/profile" class="header__avatar-wrapper">
+          <div class="header__avatar">A</div>
+          <button class="header__arrow-btn"><img :src="arrow" alt="arrow" /></button>
+        </router-link>
 
       </div>
     </div>
+    
   </header>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import messageIcon from '@/assets/icons/messages.png'
 import arrow from '@/assets/icons/arrow.png'
 import search_icon from '@/assets/icons/search_icon.png'
 import directionsIcon from '@/assets/icons/directions.png'
+import RegisterModal from '@/components/RegisterModal.vue'
 
 const props = defineProps({
-  sidebarOpen: Boolean
+  sidebarOpen: Boolean,
 })
-</script>
 
+const registerModal = ref(null)
+
+function openRegisterModal() {
+  if (registerModal.value) {
+    registerModal.value.open()
+  }
+}
+
+function closeModal() {
+  console.log('Register modal closed')
+}
+</script>
 <style scoped>
 .header__search img {
   width: 22px;
@@ -275,4 +292,18 @@ const props = defineProps({
   object-fit: contain;
 }
 
+.header__register-button {
+  background-color: #2d4834;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.header__register-button:hover {
+  background-color: #3a5f45;
+}
 </style>

@@ -4,6 +4,7 @@
     <div class="content-row">
       <Sidebar v-model="sidebarOpen" />
       <main class="main-content" :class="{ 'with-sidebar': sidebarOpen }">
+        <RegisterModal ref="registerModal" @register="handleRegister" />
         <router-view />
         
         <template v-if="showMainComponents">
@@ -24,6 +25,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
+import RegisterModal from './components/RegisterModal.vue'
 import Header from './components/Header.vue'
 import Sidebar from './components/Sidebar.vue'
 import MapView from './components/MapView.vue'
@@ -31,6 +33,12 @@ import FiltersAccordion from './components/FiltersAccordion.vue'
 import LandmarksGrid from './components/LandmarksGrid.vue'
 const sidebarOpen = ref(true)
 const route = useRoute()
+const registerModal = ref()
+
+function handleRegister(userData) {
+  console.log('Зарегистрирован пользователь:', userData)
+
+}
 const showMainComponents = computed(() => {
   return route.path !== '/profile'
 })

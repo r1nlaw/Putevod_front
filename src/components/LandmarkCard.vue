@@ -1,5 +1,8 @@
 <template>
-  <div class="landmark-card" :class="{ selected, 'wide-card': props.sidebarOpened }">
+  <div   class="landmark-card" 
+  :class="{ selected, 'wide-card': props.sidebarOpened }"
+  @click="goToLandmark"
+  >
     <img :src="image" class="landmark-image" alt="Фото" />
     <div class="landmark-content">
       <div class="landmark-title">{{ title }}</div>
@@ -34,7 +37,7 @@
         <button
           class="landmark-action"
           :class="{ remove: selected }"
-          @click="$emit('toggle', id)"
+          @click.stop="$emit('toggle', id)"
         >
           {{ selected ? 'Убрать' : 'Добавить' }}
           <span class="action-icon">
@@ -51,7 +54,17 @@ import { ref, computed } from 'vue'
 import routes from '@/assets/icons/routes.png'
 import likeIcon from '@/assets/icons/like.png'
 import reviewIcon from '@/assets/icons/review.png'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
+
+const goToLandmark = () => {
+  router.push(`/landmark/${encodeURIComponent(props.title)}`)
+}
+
+const stopPropagation = (e) => {
+  e.stopPropagation()
+}
 const props = defineProps({
   id: [String, Number],
   image: String,
