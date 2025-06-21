@@ -40,8 +40,9 @@ function handleRegister(userData) {
 
 }
 const showMainComponents = computed(() => {
-  return route.path !== '/profile'
+  return route.name !== 'Profile' && route.name !== 'LandmarkPage'
 })
+
 </script>
 
 <style scoped>

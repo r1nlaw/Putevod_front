@@ -1,7 +1,7 @@
 <template>
   <div   class="landmark-card" 
   :class="{ selected, 'wide-card': props.sidebarOpened }"
-  @click="goToLandmark"
+  @click="goToLandmark(translated_name)"
   >
     <img :src="image" class="landmark-image" alt="Фото" />
     <div class="landmark-content">
@@ -58,8 +58,9 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
-const goToLandmark = () => {
-  router.push(`/landmark/${encodeURIComponent(props.title)}`)
+function goToLandmark(nameTranslate) {
+  if (!nameTranslate) return;
+  router.push(`/landmark/${encodeURIComponent(nameTranslate)}`);
 }
 
 const stopPropagation = (e) => {
@@ -69,6 +70,7 @@ const props = defineProps({
   id: [String, Number],
   image: String,
   title: String,
+  translated_name: String,
   address: String,
   likes: Number,
   comments: Number,
@@ -117,6 +119,13 @@ const displayAddress = computed(() => {
   margin: 0;
   transition: box-shadow 0.2s;
   transition: width 0.3s ease;
+}
+
+.landmark-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1); 
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+
 }
 .landmark-card.wide-card {
   min-width: 300px;
