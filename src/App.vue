@@ -91,6 +91,9 @@ const showMainComponents = computed(() => {
     font-size: 1.5em;
     padding: 6px 10px;
   }
+  .main-content {
+    padding-top: 60px;
+  }
 }
 @media (max-width: 600px) {
   .burger-btn {

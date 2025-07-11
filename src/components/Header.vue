@@ -306,4 +306,99 @@ function closeModal() {
 .header__register-button:hover {
   background-color: #3a5f45;
 }
+@media (max-width: 900px) {
+  .header {
+    width: 100vw;
+    left: 0;
+    right: 0;
+    border-radius: 0;
+    min-height: 60px;
+    padding: 0 10px;
+    min-width: 0;
+    margin: 0;
+    box-sizing: border-box;
+  }
+  .header__logo {
+    margin-right: 4px;
+    gap: 4px;
+  }
+  .header__logo-title,
+  .header__logo-subtitle {
+    display: none !important;
+  }
+  .header__logo-img {
+    max-width: 24px;
+    max-height: 24px;
+    border-radius: 6px;
+  }
+  .header__logo-img img {
+    height: 22px;
+  }
+  .header__search-icon {
+    width: 15px !important;
+    height: 15px !important;
+    left: 6px;
+  }
+  .header__button img {
+    width: 20px;
+    height: 20px;
+  }
+  .header__arrow {
+    width: 14px;
+    height: 14px;
+    margin-right: 0.5vh;
+  }
+  .header__avatar {
+    width: 18px;
+    height: 18px;
+    font-size: 10px;
+  }
+  .header__avatar-wrapper {
+    gap: 3px;
+    border-radius: 15px;
+    width: 50px;
+  }
+  .header__arrow-btn {
+    width: 12px;
+    height: 20px;
+    font-size: 8px;
+  }
+  .header__counter {
+    font-size: 8px;
+    height: 20px;
+    padding: 0 2px 0 0;
+    border-radius: 10px;
+  }
+  .header__circle {
+    width: 20px;
+    height: 20px;
+    font-size: 6px;
+    margin-left: -2px;
+  }
+  .header__center {
+    padding: 2px 4px 2px 2px;
+    border-radius: 15px;
+  }
+  .header__search {
+    max-width: 150px;
+    margin-right: 6px;
+  }
+  .header__search input {
+    font-size: 14px;
+    padding: 6px 10px 6px 28px;
+    border-radius: 15px;
+    height: 32px;
+    min-width: 0;
+  }
+  .header__actions {
+    gap: 1px;
+    margin-right: 1%;
+  }
+  .header__register-button {
+    display: none !important;
+    padding: 2px 5px;
+    font-size: 9px;
+    border-radius: 5px;
+  }
+}
 </style>

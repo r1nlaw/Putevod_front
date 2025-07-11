@@ -11,7 +11,7 @@
       <div class="landmark-top">
         <!-- Левая колонка: картинка -->
         <div class="image-placeholder">
-          <img :src="landmark.image_path" alt="Фото" v-if="landmark.image_path" />
+          <img :src="domain + '/images/' + landmark.image_path" alt="Фото" v-if="landmark.image_path" />
         </div>
 
         <!-- Правая колонка: название, теги, краткие сведения и часть описания -->
