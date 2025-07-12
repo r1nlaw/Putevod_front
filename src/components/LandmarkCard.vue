@@ -236,19 +236,57 @@ const displayAddress = computed(() => {
   box-shadow: 0 4px 16px rgba(18, 83, 65, 0.12);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .landmark-card {
-    min-width: 90vw;
-    max-width: 100vw;
+    min-width: 40vw;
+    max-width: 60vw;
     border-radius: 16px;
+    min-height: 80vw;
+    max-height: 120vw;
+    box-shadow: none;
   }
   .landmark-image {
     border-top-left-radius: 16px;
     border-top-right-radius: 16px;
     height: 120px;
+    padding: 1px;
+    border: none;
   }
   .landmark-content {
     padding: 12px 10px 10px 10px;
+    
   }
+  .landmark-card.wide-card {
+    min-width: 40vw;
+    max-width: 60vw;
+  }
+  .landmark-title {
+    font-size: 0.8rem;
+  }
+  .landmark-address {
+    font-size: 0.6rem;
+  }
+  .landmark-weather {
+    font-size: 0.7rem;
+  }
+  .landmark-action {
+    min-width: 5vw;
+    max-width: 50vw;
+    min-height: 5vw;
+    max-height: 10vw;
+    font-size: 0.75rem;
+    gap: 0;
+  }
+  .landmark-stats {
+    gap: 4px;
+  }
+  .icon-img {
+    width: 12px;
+    height: 12px;
+  }
+  .stat {
+    font-size: 0.7rem;
+  }
+  
 }
 </style>

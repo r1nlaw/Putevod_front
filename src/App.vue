@@ -1,6 +1,9 @@
 <template>
   <div class="wrapper">
     <Header :sidebarOpen="sidebarOpen" />
+    <button class="burger-btn" v-show="isMobile || !sidebarOpen" @click="sidebarOpen = !sidebarOpen">
+        <span>&#9776;</span>
+    </button>
     <div class="content-row">
       <Sidebar v-model="sidebarOpen" />
       <main class="main-content" :class="{ 'with-sidebar': sidebarOpen }">
@@ -14,16 +17,13 @@
         </template>
         
       </main>
-      <button class="burger-btn" v-if="!sidebarOpen" @click="sidebarOpen = true">
-        <span>&#9776;</span>
-      </button>
     </div>
   </div>
 </template>
 
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import RegisterModal from './components/RegisterModal.vue'
 import Header from './components/Header.vue'
@@ -31,9 +31,25 @@ import Sidebar from './components/Sidebar.vue'
 import MapView from './components/MapView.vue'
 import FiltersAccordion from './components/FiltersAccordion.vue'
 import LandmarksGrid from './components/LandmarksGrid.vue'
-const sidebarOpen = ref(true)
+const sidebarOpen = ref(false)
 const route = useRoute()
 const registerModal = ref()
+
+const isMobile = ref(false)
+
+function updateIsMobile() {
+  isMobile.value = window.innerWidth <= 900
+}
+
+onMounted(() => {
+  updateIsMobile()
+  window.addEventListener('resize', updateIsMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateIsMobile)
+})
+
 
 function handleRegister(userData) {
   console.log('Зарегистрирован пользователь:', userData)
@@ -47,11 +63,13 @@ const showMainComponents = computed(() => {
 
 <style scoped>
 .wrapper {
+  height: 100%;
   min-height: 100vh;
   width: 100vw;
   background: #f7f7f7d5;
   display: flex;
   flex-direction: column;
+  
 }
 .content-row {
   display: flex;
@@ -59,6 +77,7 @@ const showMainComponents = computed(() => {
   flex: 1;
   min-height: 0;
 }
+
 .main-content {
   flex: 1;
   width: 100%;
@@ -71,7 +90,7 @@ const showMainComponents = computed(() => {
   
 }
 .burger-btn {
-  position: fixed;
+  position: absolute;
   top: 115px;
   left: 39px;
   background: #ffffffd5;
@@ -81,26 +100,33 @@ const showMainComponents = computed(() => {
   cursor: pointer;
   border-radius: 8px;
   padding: 8px 12px;
-  z-index: 1002;
+  z-index: 100;
   box-shadow: 0 2px 8px rgba(255, 255, 255, 0.08);
 }
 @media (max-width: 900px) {
   .burger-btn {
-    top: 12px;
-    left: 12px;
-    font-size: 1.5em;
-    padding: 6px 10px;
+    position: fixed;
+    top: 14px;
+    left: 46px;
+    font-size: 1.2em;
+    padding: 4px 8px;
   }
   .main-content {
     padding-top: 60px;
   }
+  .with-sidebar {
+    margin-left: 0;
+  }
 }
 @media (max-width: 600px) {
   .burger-btn {
-    top: 8px;
-    left: 8px;
+    top: 14px;
+    left: 46px;
     font-size: 1.2em;
     padding: 4px 8px;
+  }
+  .with-sidebar {
+    margin-left: 0;
   }
 }
 </style>

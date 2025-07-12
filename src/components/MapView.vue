@@ -1,5 +1,5 @@
 <template>
-  <div class="map-container" :class="{ expanded: isMapExpanded, 'with-sidebar': sidebarOpen }" :style="{ minHeight: isMapExpanded ? (isMobile ? '600px' : '800px') : mapHeight + 'px' }">
+  <div class="map-container" :class="{ expanded: isMapExpanded, 'with-sidebar': sidebarOpen }" :style="{ minHeight: isMapExpanded ? (isMobile ? '200px' : '800px') : mapHeight + 'px' }">
     <img
       v-if="!isMapVisible"
       src="@/assets/images/map_placeholder.png"
@@ -589,6 +589,10 @@ onBeforeUnmount(() => {
   .map-container.expanded {
     min-height: 600px;
   }
+  .map-container.with-sidebar {
+    margin-left: 0;
+    width: calc(100%);
+  }
 }
 @media (max-width: 600px) {
   .map-container {
@@ -596,11 +600,11 @@ onBeforeUnmount(() => {
     border-radius: 12px;
   }
   .map-container.expanded {
-    min-height: 350px;
+    min-height: 550px;
   }
   #map {
     border-radius: 12px;
-    min-height: 200px;
+    min-height: 400px;
   }
   .map-button {
     top: 8px;

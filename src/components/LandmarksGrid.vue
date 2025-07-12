@@ -189,12 +189,16 @@ watch(
 }
 @media (max-width: 900px) {
   .landmarks-grid.with-sidebar {
-    margin-left: 80vw;
+    margin-left: 0;
+    width: calc(100%);
   }
 }
-@media (max-width: 600px) {
-  .landmarks-grid.with-sidebar {
-    margin-left: 100vw;
+@media (max-width: 768px) {
+  .landmarks-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0;
   }
+
 }
+
 </style> 

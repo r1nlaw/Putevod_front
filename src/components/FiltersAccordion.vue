@@ -39,7 +39,7 @@ import FiltersChips from './FiltersChips.vue';
 import Archaeology from '../assets/emoji/archaeology.png'
 const props = defineProps({ sidebarOpen: Boolean });
 
-const opened = ref(0);
+const opened = ref(-1);
 const bodies = ref([]);
 const heights = ref([]);
 
@@ -137,4 +137,11 @@ onMounted(() => {
     color: #444;
     background: #fff;
   }
+
+@media (max-width: 900px) {
+  .accordion.with-sidebar {
+    margin-left: 0;
+    width: calc(100%);
+  }
+}
   </style>

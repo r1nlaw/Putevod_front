@@ -2,7 +2,10 @@
   <header class="header">
     <div class="header__logo">
       <div class="header__logo-img">
-        <img src="/src/assets/logo.png" alt="logo" />
+        <router-link to="/" class="header__logo-img">
+          <img src="/src/assets/logo.png" alt="logo" />
+        </router-link>
+        
       </div>
       <div class="header__logo-text">
         <div class="header__logo-subtitle">достопримечательности</div>
@@ -102,6 +105,9 @@ function closeModal() {
   border-radius: 12px;
   display: flex;
   align-items: center;
+  text-decoration: none;
+  cursor: pointer;
+  background: #f7f7f7d5;
 }
 
 .header__logo-img img {
@@ -285,7 +291,6 @@ function closeModal() {
 }
 
 
-
 .header__arrow-btn img {
   width: 16px;
   height: 16px;
@@ -316,11 +321,15 @@ function closeModal() {
     padding: 0 10px;
     min-width: 0;
     margin: 0;
+    gap: 40px;
     box-sizing: border-box;
   }
   .header__logo {
     margin-right: 4px;
     gap: 4px;
+  }
+  .header__center--sidebar {
+    max-width: 100vh;
   }
   .header__logo-title,
   .header__logo-subtitle {
@@ -332,7 +341,7 @@ function closeModal() {
     border-radius: 6px;
   }
   .header__logo-img img {
-    height: 22px;
+    height: 26px;
   }
   .header__search-icon {
     width: 15px !important;
@@ -378,6 +387,7 @@ function closeModal() {
   .header__center {
     padding: 2px 4px 2px 2px;
     border-radius: 15px;
+    
   }
   .header__search {
     max-width: 150px;

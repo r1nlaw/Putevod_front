@@ -208,11 +208,14 @@ const handleClick = (label, index) => {
     box-shadow: none;
     width: 0;
     min-width: 0;
-    max-width: 80vw;
+    max-width: 0;
+    top: 0;
+    left: 0;
+    height: 100vh;
     border-radius: 0 16px 16px 0;
   }
   .sidebar-wrapper.open {
-    width: 80vw;
+    width: 35vw;
     min-width: 220px;
     max-width: 80vw;
   }
@@ -226,11 +229,19 @@ const handleClick = (label, index) => {
   .sidebar-wrapper {
     max-width: 100vw;
     border-radius: 0;
+    top: 0;
+    height: 100vh;
+    left: 0;
   }
+  .sidebar-wrapper.collapsed {
+    width: 0px;
+  }
+
   .sidebar-wrapper.open {
     width: 100vw;
     min-width: 0;
     max-width: 100vw;
+    margin: 0;
   }
   .menu-toggle {
     right: -40px;
