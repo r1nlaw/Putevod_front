@@ -101,9 +101,9 @@ const router = useRouter()
 
 const profile = reactive({
   photo: '',
-  name: '',
-  bio: '',
-  description: '',
+  name: 'r1nlaw',
+  bio: 'asfasfqwssdxzvzx',
+  description: 'asfasfasfasfqwfas',
   rating: 0,
   routes: [],
 })
@@ -246,6 +246,23 @@ function onFileChange(e) {
     color: #333;
     border-radius: 2rem;
   }
+  .edit-input.title-input {
+    margin-left: 0;
+    width: 105%;
+  }
+  .edit-input.subtitle-input {
+    margin-left: 8.06vw;
+    width: 49%;
+  }
+  .edit-input {
+    resize: none;
+    border: 1px solid #4949493d;
+    border-radius: 5px;
+  }
+  .edit-input.description-input {
+    resize: none;
+    width: 100%; 
+  }
   
   /* Баннер */
   .banner {
@@ -300,14 +317,7 @@ function onFileChange(e) {
     gap: 1rem;
     justify-content: space-between;
   }
-  
-  @media (min-width: 768px) {
-    .info-header {
-      flex-direction: row;
-      align-items: center;
-    }
-  }
-  
+
   /* Новый контейнер с аватаркой и текстом */
   .avatar-info {
     display: flex;
@@ -393,17 +403,7 @@ button:hover {
     background-color: #e5e7eb;
 }
   
-button[aria-label="Дополнительные опции"] {
-    width: 2.5rem;
-    font-weight: 700;
-    font-size: 1.5rem;
-    line-height: 1;
-    color: #6b7280;
-    padding: 0;
-    user-select: none;
-  }
   
-
 .info-grid {
   display: grid;
   grid-template-columns: 2fr 1fr; 
@@ -433,14 +433,72 @@ button[aria-label="Дополнительные опции"] {
   color: #374151;
 }
 
+@media (max-width: 900px) {
+  .banner{
+    max-height: 40vw;
+    border-radius: 1rem;
+  }
+  h1 {
+    font-size: 1.4rem;
+  }
+  .subtitle {
+    font-size: 1.0rem;
+  }
+  .avatar {
+    max-width: 30vw;
+    max-height: 30vw;
+    left: 0.5rem;
+    bottom: -3rem;
+  }
+  .readers-count {
+    font-size: 0.8rem;
+  }
+  .edit-input.subtitle-input {
+    margin-left: 41.4vw;
+  }
+  .info-grid {
+    margin-top: 5rem;
+    margin-left: 0rem;
+  }
+
+  .buttons-group {
+    position: absolute;
+    top: 28%;
+    right: 0;
+  }
+  button {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.8rem;
+    
+  }
+  .info-block {
+    padding: 0rem;
+  }
+
+  
+
+}
+
+
 
 
   
-@media (min-width: 640px) {
+@media (max-width: 640px) {
   .info-grid {
     grid-template-columns: 2fr 1fr;
   }
+  .text-info{
+    margin-left: 0%;
+  }
 }
+
+@media (max-width: 412px) {
+
+  .text-info{
+    margin-left: -8%;
+  }
+}
+  
   
   h3 {
     margin: 0 0 0.25rem 0;
