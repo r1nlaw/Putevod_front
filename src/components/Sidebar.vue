@@ -10,6 +10,7 @@
       >
         &#8592;
       </button>
+      <RegisterModal ref="registerModal" @close="closeModal" />
     </div>
 
     <ul class="sidebar-nav">
@@ -25,7 +26,7 @@
         <span v-show="modelValue">{{ item.label }}</span>
       </li>
     </ul>
-
+    
     <button class="menu-toggle" @click="$emit('update:modelValue', !modelValue)">
       <span v-if="modelValue">&#10005;</span>
       <span v-else>&#9776;</span>
@@ -42,14 +43,23 @@ import feed from '@/assets/icons/feed.png'
 import landmarks from '@/assets/icons/landmarks.png'
 import navmap from '@/assets/icons/navmap.png'
 import routes from '@/assets/icons/routes.png'
+import RegisterModal from './RegisterModal.vue'
 
 import { useRouter } from 'vue-router'
 const router = useRouter()
 
+
 defineProps({
   modelValue: Boolean
 })
-defineEmits(['update:modelValue'])
+defineEmits(['update:modelValue', 'open-register-modal'])
+
+const registerModal = ref(null)
+function openRegisterModal() {
+  if (registerModal.value) {
+    registerModal.value.open()
+  }
+}
 
 const activeIndex = ref(0)
 
@@ -67,13 +77,23 @@ const handleClick = (label, index) => {
   activeIndex.value = index
 
   if (label === 'Профиль') {
-    router.push('/profile')
+    const token = localStorage.getItem('token')
+
+    if (token) {
+      router.push('/profile')
+    } else {
+      openRegisterModal() 
+    }
+    return
   }
+
   if (label === 'Достопримечательности') {
     router.push('/')
   }
 
+  
 }
+
 
 </script>
 

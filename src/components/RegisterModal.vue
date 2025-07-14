@@ -128,7 +128,7 @@ import { ref, defineExpose, defineEmits } from 'vue'
 import eyeIcon from '@/assets/icons/eye.png'
 import eyeOffIcon from '@/assets/icons/eye-off.png'
 
-const emit = defineEmits(['close'])
+const emit = defineEmits(['modal-open', 'close'])
 
 const isOpen = ref(false)
 const isRegistering = ref(false)
@@ -147,6 +147,7 @@ function togglePassword() {
 }
 
 function open() {
+  emit('modal-open')
   isOpen.value = true
   isRegistering.value = false
 }
@@ -294,9 +295,15 @@ input {
 
 .modal-overlay {
   position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100vw;
+  height: 100vh;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.6);
   display: flex;
+  pointer-events: auto;
   justify-content: center;
   align-items: center;
   z-index: 1500;
@@ -304,14 +311,17 @@ input {
 }
 
 .modal-content {
+  position: relative;
   background-color: #ffffff;
   border-radius: 55px;
   padding: 3rem;
   width: 90%;
+  pointer-events: auto;
   max-width: 700px;
+  z-index: 1501;
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
   animation: slideUp 0.3s ease;
-  position: relative;
+  
 }
 
 .close-btn {
@@ -643,6 +653,19 @@ input:focus {
   to {
     transform: translateY(0);
     opacity: 1;
+  }
+}
+
+@media (max-width: 900px){
+  .auth-buttons {
+    display: block;
+  }
+  .primary-btn {
+    width: 100%;
+  }
+  .social-buttons {
+    margin-top: 5vw;
+    gap: 0.5rem;
   }
 }
 </style>

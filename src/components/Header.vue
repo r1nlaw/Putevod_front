@@ -32,13 +32,13 @@
           </button>
         </div>
 
-        <!-- Новая кнопка регистрации -->
-        <button class="header__register-button" @click="openRegisterModal">Регистрация</button>
         <RegisterModal ref="registerModal" @close="closeModal" />
-        <router-link to="/profile" class="header__avatar-wrapper">
+        <div class="header__avatar-wrapper" @click="handleProfileClick">
           <div class="header__avatar">A</div>
-          <button class="header__arrow-btn"><img :src="arrow" alt="arrow" /></button>
-        </router-link>
+          <button class="header__arrow-btn">
+            <img :src="arrow" alt="arrow" />
+          </button>
+        </div>
 
       </div>
     </div>
@@ -48,6 +48,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import messageIcon from '@/assets/icons/messages.png'
 import arrow from '@/assets/icons/arrow.png'
 import search_icon from '@/assets/icons/search_icon.png'
@@ -59,6 +60,7 @@ const props = defineProps({
 })
 
 const registerModal = ref(null)
+const router = useRouter()
 
 function openRegisterModal() {
   if (registerModal.value) {
@@ -69,6 +71,17 @@ function openRegisterModal() {
 function closeModal() {
   console.log('Register modal closed')
 }
+
+function handleProfileClick() {
+  const token = localStorage.getItem('token')
+
+  if (token) {
+    router.push('/profile')
+  } else {
+    openRegisterModal()
+  }
+}
+
 </script>
 <style scoped>
 .header__search img {
@@ -85,12 +98,11 @@ function closeModal() {
   margin: 0;
   width: 100vw;
   box-sizing: border-box;
-  
   min-height: 100px;
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 100;
+  z-index: 20;
 }
 
 .header__logo {
@@ -317,7 +329,7 @@ function closeModal() {
     left: 0;
     right: 0;
     border-radius: 0;
-    min-height: 60px;
+    min-height: 70px;
     padding: 0 10px;
     min-width: 0;
     margin: 0;
@@ -341,16 +353,16 @@ function closeModal() {
     border-radius: 6px;
   }
   .header__logo-img img {
-    height: 26px;
+    height: 27px;
   }
   .header__search-icon {
-    width: 15px !important;
-    height: 15px !important;
+    width: 20px !important;
+    height: 20px !important;
     left: 6px;
   }
   .header__button img {
-    width: 20px;
-    height: 20px;
+    width: 27px;
+    height: 27px;
   }
   .header__arrow {
     width: 14px;
@@ -358,30 +370,30 @@ function closeModal() {
     margin-right: 0.5vh;
   }
   .header__avatar {
-    width: 18px;
-    height: 18px;
+    width: 27px;
+    height: 27px;
     font-size: 10px;
   }
   .header__avatar-wrapper {
-    gap: 3px;
+    gap: 2px;
     border-radius: 15px;
     width: 50px;
   }
   .header__arrow-btn {
     width: 12px;
-    height: 20px;
+    height: 19px;
     font-size: 8px;
   }
   .header__counter {
     font-size: 8px;
-    height: 20px;
+    height: 27px;
     padding: 0 2px 0 0;
     border-radius: 10px;
   }
   .header__circle {
-    width: 20px;
-    height: 20px;
-    font-size: 6px;
+    width: 27px;
+    height: 27px;
+    font-size: 14px;
     margin-left: -2px;
   }
   .header__center {
@@ -397,11 +409,11 @@ function closeModal() {
     font-size: 14px;
     padding: 6px 10px 6px 28px;
     border-radius: 15px;
-    height: 32px;
+    height: 37px;
     min-width: 0;
   }
   .header__actions {
-    gap: 1px;
+    gap: 4px;
     margin-right: 1%;
   }
   .header__register-button {
