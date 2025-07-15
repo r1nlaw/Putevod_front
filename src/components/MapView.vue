@@ -407,7 +407,7 @@ onBeforeUnmount(() => {
   position: absolute;
   top: 16px;
   right: 16px;
-  z-index: 10;
+  z-index: 1;
   background: #fff;
   border: 1px solid #ccc;
   padding: 8px 10px;

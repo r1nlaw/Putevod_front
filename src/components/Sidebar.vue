@@ -1,14 +1,31 @@
 <template>
-  <div :class="['sidebar-wrapper', { open: modelValue, collapsed: !modelValue }]">
-    <div class="sidebar-header">
-      <span class="sidebar-title" v-show="modelValue">Разделы</span>
+  <div class="sidebar-wrapper" :class="{ open: modelValue, collapsed: !modelValue }">
+    <Teleport to="#burger-target" v-if="isMobile">
+      <button 
+        class="burger-button" 
+        v-show="!modelValue"
+        @click="$emit('update:modelValue', true)"
+      >
+        ☰
+      </button>
+    </Teleport>
+    
+    <button 
+      class="burger-button" 
+      v-show="!modelValue && !isMobile"
+      @click="$emit('update:modelValue', true)"
+    >
+      ☰
+    </button>
+    
+    <div class="sidebar-header" v-show="modelValue">
+      <span class="sidebar-title">Разделы</span>
       <button
         class="sidebar-back"
         title="Назад"
         @click="$emit('update:modelValue', false)"
-        v-show="modelValue"
       >
-        &#8592;
+        ←
       </button>
       <RegisterModal ref="registerModal" @close="closeModal" />
     </div>
@@ -28,15 +45,14 @@
     </ul>
     
     <button class="menu-toggle" @click="$emit('update:modelValue', !modelValue)">
-      <span v-if="modelValue">&#10005;</span>
-      <span v-else>&#9776;</span>
+      <span v-if="modelValue">✕</span>
+      <span v-else>☰</span>
     </button>
   </div>
 </template>
 
-
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import challenges from '@/assets/icons/challenges.png'
 import events from '@/assets/icons/events.png'
 import feed from '@/assets/icons/feed.png'
@@ -44,15 +60,14 @@ import landmarks from '@/assets/icons/landmarks.png'
 import navmap from '@/assets/icons/navmap.png'
 import routes from '@/assets/icons/routes.png'
 import RegisterModal from './RegisterModal.vue'
-
 import { useRouter } from 'vue-router'
-const router = useRouter()
 
+const router = useRouter()
 
 defineProps({
   modelValue: Boolean
 })
-defineEmits(['update:modelValue', 'open-register-modal'])
+const emit = defineEmits(['update:modelValue', 'open-register-modal'])
 
 const registerModal = ref(null)
 function openRegisterModal() {
@@ -73,12 +88,25 @@ const menuItems = [
   { label: 'Путеводитель', icon: navmap }
 ]
 
+const isMobile = ref(window.innerWidth <= 900)
+
+const updateIsMobile = () => {
+  isMobile.value = window.innerWidth <= 900
+}
+
+onMounted(() => {
+  window.addEventListener('resize', updateIsMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateIsMobile)
+})
+
 const handleClick = (label, index) => {
   activeIndex.value = index
 
   if (label === 'Профиль') {
     const token = localStorage.getItem('token')
-
     if (token) {
       router.push('/profile')
     } else {
@@ -90,14 +118,33 @@ const handleClick = (label, index) => {
   if (label === 'Достопримечательности') {
     router.push('/')
   }
+  if (label === 'Маршруты') {
+    router.push('/routeList')
+  }
 
-  
+  emit('update:modelValue', false)
 }
-
-
 </script>
 
 <style scoped>
+.burger-button {
+  position: absolute;
+  top: 8px;
+  left: 11px;
+  background: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 1.1em;
+  cursor: pointer;
+  z-index: 2001;
+  transition: opacity 0.3s;
+}
+
+.burger-button:hover {
+  background: #f7f7f7;
+}
+
 .sidebar-icon img {
   width: 22px;
   height: 22px;
@@ -108,7 +155,7 @@ const handleClick = (label, index) => {
   align-items: center;
   gap: 8px;
   padding: 0 0 16px 0;
-  margin: 24px 24px 0 24px;
+  margin: 48px 24px 0 24px;
 }
 .sidebar-title {
   font-size: 20px;
@@ -164,7 +211,7 @@ const handleClick = (label, index) => {
   width: 300px;
 }
 .sidebar-wrapper.collapsed {
-  width: 60px; /* минимальная ширина для отображения иконок */
+  width: 60px;
 }
 .menu-toggle {
   position: absolute;
@@ -186,7 +233,7 @@ const handleClick = (label, index) => {
   width: 100%;
   text-align: left;
   margin: 0;
-  margin-top: 8px;
+  margin-top: 45px;
 }
 .sidebar-item {
   display: flex;
@@ -204,7 +251,6 @@ const handleClick = (label, index) => {
   background: #f7f7f7;
 }
 .sidebar-item--active {
-  background: #ededed;
   font-weight: 600;
   padding-left: 15px;
   padding-right: 24px;
@@ -212,8 +258,6 @@ const handleClick = (label, index) => {
   margin-right: 8px;
   border-radius: 8px;
 }
-
-
 .sidebar-icon {
   font-size: 18px;
   width: 22px;
@@ -244,6 +288,11 @@ const handleClick = (label, index) => {
     top: 10px;
     font-size: 1.5em;
   }
+  .burger-button {
+    top: 10px;
+    left: 10px;
+    padding: 5px 9px;
+  }
 }
 @media (max-width: 600px) {
   .sidebar-wrapper {
@@ -256,7 +305,6 @@ const handleClick = (label, index) => {
   .sidebar-wrapper.collapsed {
     width: 0px;
   }
-
   .sidebar-wrapper.open {
     width: 100vw;
     min-width: 0;
@@ -268,5 +316,10 @@ const handleClick = (label, index) => {
     top: 6px;
     font-size: 1.2em;
   }
+  .burger-button {
+    top: 6px;
+    left: 6px;
+    font-size: 1.2em;
+  }
 }
-</style> 
+</style>

@@ -1,5 +1,6 @@
 <template>
   <header class="header">
+    <div id="burger-target"></div>
     <div class="header__logo">
       <div class="header__logo-img">
         <router-link to="/" class="header__logo-img">
@@ -21,10 +22,12 @@
       </div>
 
       <div class="header__actions">
-        <div class="header__counter">
+        <router-link to="/routeList" class="header__counter-router">
+          <div class="header__counter">
           <div class="header__circle">2</div>
           <img :src="directionsIcon" alt="directions" class="header__arrow" />
         </div>
+        </router-link>
 
         <div class="header__message">
           <button class="header__button">
@@ -198,6 +201,13 @@ function handleProfileClick() {
   pointer-events: none;
 }
 
+#burger-target {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  z-index: 10;
+}
+
 .header__button {
   width: 32px;
   height: 32px;
@@ -214,6 +224,10 @@ function handleProfileClick() {
 .header__message{
   border-radius: 20px;
   
+}
+.header__counter-router {
+  text-decoration: none;
+  background: #ffffffd5;
 }
 
 .header__button img {
@@ -336,6 +350,14 @@ function handleProfileClick() {
     gap: 40px;
     box-sizing: border-box;
   }
+  #burger-target {
+    left: 38px;
+    top: 11px;
+    font-size: 1rem;
+    
+
+  }
+
   .header__logo {
     margin-right: 4px;
     gap: 4px;

@@ -1,5 +1,5 @@
 <template>
-  <div v-if="isOpen" class="modal-overlay" @click.self="close">
+  <div v-show="isOpen" class="modal-overlay" @click.self="close">
     <!-- Ошибка-модалка -->
     <div v-if="errorModal" class="error-modal">
       <div class="error-box">
@@ -127,6 +127,7 @@
 import { ref, defineExpose, defineEmits } from 'vue'
 import eyeIcon from '@/assets/icons/eye.png'
 import eyeOffIcon from '@/assets/icons/eye-off.png'
+const rememberPassword = ref()
 
 const emit = defineEmits(['modal-open', 'close'])
 
@@ -147,9 +148,9 @@ function togglePassword() {
 }
 
 function open() {
-  emit('modal-open')
   isOpen.value = true
   isRegistering.value = false
+  emit('modal-open')
 }
 
 function close() {
@@ -161,6 +162,7 @@ function close() {
   showPassword.value = false
   emit('close')
 }
+
 
 function toggleMode() {
   isRegistering.value = !isRegistering.value
@@ -298,8 +300,8 @@ input {
   top: 0;
   left: 0;
   right: 0;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.6);
   display: flex;

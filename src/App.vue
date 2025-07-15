@@ -1,14 +1,9 @@
 <template>
   <div class="wrapper">
+   
     <Header :sidebarOpen="sidebarOpen" />
-    <button 
-      class="burger-btn" 
-      v-show="!isModalOpen"
-      @click="toggleSidebar"
-    >
-      <span>&#9776;</span>
-    </button>
-
+    
+   
     <div class="content-row">
       <Sidebar 
         v-model="sidebarOpen" 
@@ -16,14 +11,13 @@
       />
 
       <main class="main-content" :class="{ 'with-sidebar': sidebarOpen }">
+        
         <RegisterModal 
           ref="registerModal" 
           @register="handleRegister" 
-          @modal-open="onModalOpen"
           @close="onModalClose"
         />
         <router-view />
-        
         <template v-if="showMainComponents">
           <MapView :sidebar-open="sidebarOpen" />
           <FiltersAccordion :sidebar-open="sidebarOpen" />
@@ -35,7 +29,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted  } from 'vue'
 import { useRoute } from 'vue-router'
 import RegisterModal from './components/RegisterModal.vue'
 import Header from './components/Header.vue'
@@ -47,27 +41,17 @@ import LandmarksGrid from './components/LandmarksGrid.vue'
 const sidebarOpen = ref(false)
 const route = useRoute()
 const registerModal = ref()
-const isModalOpen = ref(false) // Track modal open state
+const isModalOpen = ref(false)
 const isMobile = ref(false)
 
 function updateIsMobile() {
   isMobile.value = window.innerWidth <= 900
 }
-function toggleSidebar() {
-  if (isModalOpen.value) return
-  sidebarOpen.value = !sidebarOpen.value
-}
-function onModalOpen() {
-  console.log('modal opened')
-  isModalOpen.value.open()
-  console.log(isModalOpen.value.open())
-  
-}
 
 function onModalClose() {
   isModalOpen.value = false
+  console.log('onModalClose, isModalOpen =', isModalOpen.value)
 }
-
 
 onMounted(() => {
   updateIsMobile()
@@ -83,7 +67,7 @@ function handleRegister(userData) {
 }
 
 const showMainComponents = computed(() => {
-  return route.name !== 'Profile' && route.name !== 'LandmarkPage'
+  return route.name !== 'Profile' && route.name !== 'LandmarkPage' && route.name !== 'RouteList'
 })
 </script>
 
@@ -115,21 +99,6 @@ const showMainComponents = computed(() => {
   padding-top: 110px;
 }
 
-.burger-btn {
-  position: absolute;
-  top: 115px;
-  left: 39px;
-  background: #ffffffd5;
-  color: #000000;
-  border: none;
-  font-size: 1.3em;
-  cursor: pointer;
-  border-radius: 8px;
-  padding: 8px 12px;
-  z-index: 30;
-  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.08);
-  transition: opacity 0.3s ease; 
-}
 
 .burger-btn.dimmed {
   opacity: 0.5; 
