@@ -24,19 +24,20 @@
             </ul>
           </div>
           <div class="route-summary">
-            <h3>Ваш маршрут</h3>
             <div class="route-details">
-              <div class="route-line">
-                <div v-for="(item, index) in routeItems" :key="index" class="dot"></div>
-              </div>
+              <div class="route-line"></div>
               <ul class="route-list">
-                <li v-for="(place, index) in selectedPlaces" :key="place.id">
-                  {{ place.name }} <span class="route-distance">{{ place.distance }}</span>
+                <li v-for="(place, index) in selectedPlaces" :key="place.id" class="route-item">
+                  <div class="dot"></div>
+                  <div class="route-name">{{ place.name }}</div>
+                  <div class="route-distance">{{ place.distance }}</div>
                 </li>
               </ul>
               <p>Пешеходный маршрут <span class="route-duration">24 мин</span></p>
-              <button class="build-route-button" @click="buildRoute">Сохранить</button>
-              <button class="build-route-button secondary" @click="clearRoute">Очистить маршрут</button>
+              <div class="button-action">
+                <button class="build-route-button" @click="buildRoute">Следовать</button>
+                <button class="build-route-button secondary" @click="clearRoute">Очистить маршрут</button>
+              </div>
             </div>
           </div>
         </div>
@@ -46,7 +47,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import MapView from '@/components/MapView.vue'
 
 const selectedPlaces = ref([])
@@ -56,8 +57,6 @@ onMounted(() => {
   const savedPlaces = JSON.parse(localStorage.getItem('selectedPlaces') || '[]')
   selectedPlaces.value = savedPlaces
 })
-
-const routeItems = computed(() => selectedPlaces.value.length)
 
 const removePlace = (index, id) => {
   selectedPlaces.value.splice(index, 1)
@@ -156,6 +155,7 @@ const clearRoute = () => {
 }
 
 .place-name {
+  font-family: "Montserrat", sans-serif;
   font-size: 15px;
   color: #1d1d1d;
   font-weight: 400;
@@ -179,53 +179,62 @@ const clearRoute = () => {
   position: relative;
 }
 
+.button-action {
+  display: flex;
+  gap: 15px;
+}
+
 .route-line {
   position: absolute;
-  left: -20px;
-  top: 0;
-  height: 100%;
+  left: 5px;
+  top: 19px;
+  height: 83%;
   width: 2px;
-  background-color: #2e7d32;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  background-color: #2d4834;
 }
 
 .dot {
   width: 10px;
   height: 10px;
-  background-color: #2e7d32;
+  background-color: #2d4834;
   border-radius: 50%;
-  margin-bottom: 20px;
-}
-
-.dot:first-child {
-  margin-top: -5px;
+  position: absolute;
+  left: -19px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .route-list {
+  font-family: "Montserrat", sans-serif;
   list-style-type: none;
   padding-left: 20px;
   margin: 0 0 16px 0;
 }
-li {
+
+.route-item {
+  margin-bottom: 24px;
+  color: #1d1d1d;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+}
+
+.route-name {
+  font-size: 15px;
+  font-weight: 400;
   color: #1d1d1d;
 }
 
-.route-item {
-  margin-bottom: 20px;
+.route-distance {
+  font-size: 12px;
   color: #1d1d1d;
-  position: relative;
 }
 
 p {
   color: #1d1d1d;
   margin-bottom: 8px;
-}
-
-.route-distance {
-  color: #1d1d1d;
-  margin-left: 8px;
+  font-family: "Montserrat", sans-serif;
 }
 
 .route-duration {
@@ -233,21 +242,22 @@ p {
 }
 
 .build-route-button {
-  background-color: #2e7d32;
+  font-family: "Montserrat", sans-serif;
+  background-color: #2d4834;
   color: white;
   border: none;
   padding: 10px 20px;
   border-radius: 8px;
   cursor: pointer;
-  width: 100%;
+  width: 30%;
   margin-bottom: 8px;
   font-size: 16px;
 }
 
 .build-route-button.secondary {
   background-color: #fff;
-  color: #2e7d32;
-  border: 1px solid #2e7d32;
+  color: #2d4834;
+  border: 1px solid #2d4834;
 }
 
 @media (max-width: 900px) {

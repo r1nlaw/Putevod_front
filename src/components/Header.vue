@@ -24,7 +24,7 @@
       <div class="header__actions">
         <router-link to="/routeList" class="header__counter-router">
           <div class="header__counter">
-          <div class="header__circle">2</div>
+            <div class="header__circle">{{ selectedCount }}</div>
           <img :src="directionsIcon" alt="directions" class="header__arrow" />
         </div>
         </router-link>
@@ -50,7 +50,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onBeforeUnmount  } from 'vue'
 import { useRouter } from 'vue-router'
 import messageIcon from '@/assets/icons/messages.png'
 import arrow from '@/assets/icons/arrow.png'
@@ -64,6 +64,33 @@ const props = defineProps({
 
 const registerModal = ref(null)
 const router = useRouter()
+
+
+const selectedCount = ref(0)
+
+onMounted(() => {
+  updateSelectedCount()
+  window.addEventListener('storage', updateSelectedCount)
+  window.addEventListener('selectedPlacesUpdated', updateSelectedCount)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('storage', updateSelectedCount)
+  window.removeEventListener('selectedPlacesUpdated', updateSelectedCount)
+})
+
+function updateSelectedCount() {
+  const data = localStorage.getItem('selectedPlaces')
+  if (data) {
+    try {
+      const arr = JSON.parse(data)
+      selectedCount.value = Array.isArray(arr) ? arr.length : 0
+    } catch {
+      selectedCount.value = 0
+    }
+  } else {
+    selectedCount.value = 0
+  }
+}
 
 function openRegisterModal() {
   if (registerModal.value) {
