@@ -105,57 +105,82 @@ const profile = reactive({
   bio: 'asfasfqwssdxzvzx',
   description: 'asfasfasfasfqwfas',
   rating: 0,
-  routes: [],
+  routes: []
 })
 
 const edited = reactive({
   photo: '',
   name: '',
   bio: '',
-  description: '',
+  description: ''
 })
 
-const domain = `${import.meta.env.VITE_BACKEND_URL}`
+const domain = import.meta.env.VITE_BACKEND_URL
 
 onMounted(async () => {
   const token = localStorage.getItem("token")
+  const user_id = localStorage.getItem("user_id")
   const isAuthenticated = !!token
 
-  if (isAuthenticated) {
-    try {
-      const response = await fetch(`${domain}/user/profile`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      })
+  if (!isAuthenticated) {
+    console.warn('Токен отсутствует, пользователь не аутентифицирован')
+    alert('Пожалуйста, войдите в систему')
+    return
+  }
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || errorData.error || 'Не удалось загрузить профиль')
+  if (!user_id) {
+    console.warn('user_id отсутствует в localStorage')
+    alert('Ошибка: Не удалось найти user_id. Пожалуйста, войдите снова.')
+    return
+  }
+
+  try {
+    const response = await fetch(`${domain}/user/profile/${user_id}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
       }
+    })
 
-      const data = await response.json()
-      profile.name = data.username || localStorage.getItem("username") || ''
-      profile.bio = data.user_bio || 'Люблю путешествовать и открывать новые маршруты!'
-      profile.description = data.description || ''  // добавил описание
-      profile.photo = data.avatar || ''
-      profile.rating = data.rating || 4.7
-      profile.routes = data.routes || [
-        { id: 1, name: 'Крымская тропа' },
-        { id: 2, name: 'Пеший маршрут по горам' },
-        { id: 3, name: 'Велоэкскурсия по городу' },
-      ]
-      localStorage.setItem("user_id", data.user_id)
-
-      edited.name = profile.name
-      edited.bio = profile.bio
-      edited.description = profile.description
-      edited.photo = profile.photo
-    } catch (err) {
-      console.error(err)
-      alert('Не удалось загрузить профиль: ' + err.message)
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.message || errorData.error || 'Не удалось загрузить профиль')
     }
+
+    const responseData = await response.json()
+    console.log('Ответ сервера /user/profile:', responseData)
+
+    // Assuming responseData follows the structure { message, data: { user: { id, username, ... }, ... } }
+    const data = responseData.data || responseData // Fallback to responseData if no nested data object
+
+    profile.name = data.username || data.user?.username || localStorage.getItem("username") || ''
+    profile.bio = data.user_bio || data.user?.user_bio || 'Люблю путешествовать и открывать новые маршруты!'
+    profile.description = data.description || data.user?.description || ''
+    profile.photo = data.avatar || data.user?.avatar || ''
+    profile.rating = data.rating || data.user?.rating || 4.7
+    profile.routes = data.routes || data.user?.routes || [
+      { id: 1, name: 'Крымская тропа' },
+      { id: 2, name: 'Пеший маршрут по горам' },
+      { id: 3, name: 'Велоэкскурсия по городу' }
+    ]
+
+    // Store user_id from data.user.id if available, otherwise keep existing user_id
+    const newUserId = data.user?.id || data.user_id
+    if (newUserId) {
+      localStorage.setItem("user_id", newUserId)
+      console.log('user_id сохранен:', newUserId)
+    } else {
+      console.warn('user_id отсутствует в ответе сервера:', data)
+    }
+
+    edited.name = profile.name
+    edited.bio = profile.bio
+    edited.description = profile.description
+    edited.photo = profile.photo
+  } catch (err) {
+    console.error('Ошибка при загрузке профиля:', err)
+    alert('Не удалось загрузить профиль: ' + err.message)
   }
 })
 
@@ -166,6 +191,7 @@ const getAvatarSrc = computed(() => {
 
 async function toggleEdit() {
   const token = localStorage.getItem("token")
+  const user_id = localStorage.getItem("user_id")
   const isAuthenticated = !!token
 
   if (!isAuthenticated) {
@@ -173,22 +199,29 @@ async function toggleEdit() {
     return
   }
 
+  if (!user_id) {
+    console.warn('user_id отсутствует в localStorage')
+    alert('Ошибка: Не удалось найти user_id. Пожалуйста, войдите снова.')
+    return
+  }
+
   if (isEditing.value) {
     try {
       const payload = {
+        user_id: user_id,
         username: edited.name,
         user_bio: edited.bio,
         description: edited.description,
-        avatar: edited.photo || null,
+        avatar: edited.photo || null
       }
 
       const response = await fetch(`${domain}/user/changeProfile`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(payload)
       })
 
       if (!response.ok) {
@@ -202,7 +235,7 @@ async function toggleEdit() {
       profile.description = edited.description
       if (edited.photo) profile.photo = edited.photo
     } catch (err) {
-      console.error(err)
+      console.error('Ошибка при сохранении профиля:', err)
       alert(err.message)
     }
   } else {
@@ -478,9 +511,6 @@ button:hover {
   
 
 }
-
-
-
 
   
 @media (max-width: 640px) {

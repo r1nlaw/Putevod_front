@@ -64,6 +64,10 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
+function closeModal() {
+  console.log('Модалка закрыта')
+}
+
 defineProps({
   modelValue: Boolean
 })

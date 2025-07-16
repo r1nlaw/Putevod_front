@@ -37,7 +37,7 @@ async function loadLandmark(categories = selectedCategories.value) {
   isLoading.value = true;
 
   const domain = import.meta.env.VITE_BACKEND_URL;
-  let url = `${domain}/api/landmark?page=${currentPage.value}`;
+  let url = `${domain}/landmarks?page=${currentPage.value}`;
 
   if (categories.length > 0) {
     url += '&' + categories.map(cat => `category=${encodeURIComponent(cat)}`).join('&');

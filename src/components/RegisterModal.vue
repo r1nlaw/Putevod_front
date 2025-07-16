@@ -127,19 +127,16 @@
 import { ref, defineExpose, defineEmits } from 'vue'
 import eyeIcon from '@/assets/icons/eye.png'
 import eyeOffIcon from '@/assets/icons/eye-off.png'
-const rememberPassword = ref()
 
+const rememberPassword = ref()
 const emit = defineEmits(['modal-open', 'close'])
 
 const isOpen = ref(false)
 const isRegistering = ref(false)
-
 const name = ref('')
 const email = ref('')
 const password = ref('')
-
 const showPassword = ref(false)
-
 const errorModal = ref(false)
 const errorMessage = ref('')
 
@@ -163,7 +160,6 @@ function close() {
   emit('close')
 }
 
-
 function toggleMode() {
   isRegistering.value = !isRegistering.value
 }
@@ -174,17 +170,14 @@ function showError(message) {
 }
 
 function authWithGoogle() {
-  // Реализация авторизации через Google
   console.log('Авторизация через Google')
 }
 
 function authWithVK() {
-  // Реализация авторизации через VK
   console.log('Авторизация через VK')
 }
 
 function authWithApple() {
-  // Реализация авторизации через Apple
   console.log('Авторизация через Apple')
 }
 
@@ -200,8 +193,8 @@ async function handleSubmit() {
       : `${import.meta.env.VITE_BACKEND_URL}/user/signIn`
 
     const payload = isRegistering.value
-      ? { username: name.value, email: email.value, password_hash: password.value }
-      : { email: email.value, password_hash: password.value }
+      ? { username: name.value, email: email.value, password: password.value }
+      : { email: email.value, password: password.value }
 
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -211,9 +204,7 @@ async function handleSubmit() {
 
     if (!response.ok) {
       let message = 'Неизвестная ошибка'
-
       const errorData = await response.json()
-
       switch (response.status) {
         case 400:
           message = errorData.message || 'Неверно введена электронная почта'
@@ -235,18 +226,16 @@ async function handleSubmit() {
         default:
           message = errorData.message || errorData.error || 'Произошла ошибка при обработке запроса'
       }
-
       showError(`Ошибка: ${message}`)
       return
     }
 
-    const data = await response.json()
+    const responseData = await response.json()
+    const data = responseData.data 
 
     if (isRegistering.value) {
-      // После успешной регистрации автоматически логинимся
       isRegistering.value = false
-      // Меняем payload и endpoint под логин
-      const loginPayload = { email: email.value, password_hash: password.value }
+      const loginPayload = { email: email.value, password: password.value }
       const loginResponse = await fetch(`${import.meta.env.VITE_BACKEND_URL}/user/signIn`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -258,14 +247,20 @@ async function handleSubmit() {
         return
       }
 
-      const loginData = await loginResponse.json()
+      const loginResponseData = await loginResponse.json()
+      const loginData = loginResponseData.data 
+
       if (loginData.user) {
         localStorage.setItem('username', loginData.user.username)
         localStorage.setItem('user_id', loginData.user.id)
       }
       if (loginData.token) {
         localStorage.setItem('token', loginData.token)
+        console.log('Токен сохранен:', localStorage.getItem('token'))
+      } else {
+        console.warn('Токен отсутствует в ответе signIn:', loginData)
       }
+
       window.location.reload()
       close()
       return
@@ -277,6 +272,9 @@ async function handleSubmit() {
     }
     if (data.token) {
       localStorage.setItem('token', data.token)
+      console.log('Токен сохранен:', localStorage.getItem('token'))
+    } else {
+      console.warn('Токен отсутствует в ответе:', data)
     }
     window.location.reload()
     close()
