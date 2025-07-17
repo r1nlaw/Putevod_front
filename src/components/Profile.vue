@@ -151,8 +151,7 @@ onMounted(async () => {
     const responseData = await response.json()
     console.log('Ответ сервера /user/profile:', responseData)
 
-    // Assuming responseData follows the structure { message, data: { user: { id, username, ... }, ... } }
-    const data = responseData.data || responseData // Fallback to responseData if no nested data object
+    const data = responseData.data || responseData 
 
     profile.name = data.username || data.user?.username || localStorage.getItem("username") || ''
     profile.bio = data.user_bio || data.user?.user_bio || 'Люблю путешествовать и открывать новые маршруты!'
@@ -165,7 +164,6 @@ onMounted(async () => {
       { id: 3, name: 'Велоэкскурсия по городу' }
     ]
 
-    // Store user_id from data.user.id if available, otherwise keep existing user_id
     const newUserId = data.user?.id || data.user_id
     if (newUserId) {
       localStorage.setItem("user_id", newUserId)
@@ -207,21 +205,25 @@ async function toggleEdit() {
 
   if (isEditing.value) {
     try {
-      const payload = {
-        user_id: user_id,
-        username: edited.name,
-        user_bio: edited.bio,
-        description: edited.description,
-        avatar: edited.photo || null
+      const formData = new FormData();
+      formData.append('user_id', user_id);
+      formData.append('user_name', edited.name);
+      formData.append('country', edited.country);
+      formData.append('cite', edited.cite);
+      formData.append('bio', edited.bio);
+      formData.append('website_url', edited.website_url);
+      formData.append('gender', edited.gender);
+      formData.append('description', edited.description);
+      if (edited.photo instanceof File) {
+        formData.append('avatar', edited.photo);
       }
 
-      const response = await fetch(`${domain}/user/changeProfile`, {
+      const response = await fetch(`${domain}/user/profile/change/${user_id}`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(payload)
+        body: formData
       })
 
       if (!response.ok) {
@@ -229,7 +231,6 @@ async function toggleEdit() {
         throw new Error(errorData.message || errorData.error || 'Ошибка при сохранении профиля')
       }
 
-      // Обновляем profile данными из edited
       profile.name = edited.name
       profile.bio = edited.bio
       profile.description = edited.description
@@ -261,7 +262,7 @@ function onFileChange(e) {
   if (file) {
     const reader = new FileReader()
     reader.onload = () => {
-      const base64 = reader.result.split(',')[1] // отделяем чистый base64
+      const base64 = reader.result.split(',')[1] 
       edited.photo = base64
     }
     reader.readAsDataURL(file)
@@ -297,14 +298,13 @@ function onFileChange(e) {
     width: 100%; 
   }
   
-  /* Баннер */
   .banner {
     position: relative;
     background-size: cover;
     background-position: center;
     border-radius: 2rem;
-    overflow: visible; /* чтобы аватар не обрезался */
-    margin-bottom: -0.0rem; /* чтобы аватар не накладывался на следующий блок */
+    overflow: visible; 
+    margin-bottom: -0.0rem; 
     height: 220px;
   }
   
@@ -321,8 +321,7 @@ function onFileChange(e) {
     box-shadow: 0 0 6px rgba(0, 0, 0, 0.15);
     z-index: 10;
   }
-  
-  /* Новый маленький аватар для блока с текстом справа */
+
   .avatar-small {
     width: 150px;
     height: 150px;
@@ -334,7 +333,7 @@ function onFileChange(e) {
     flex-shrink: 0;
   }
   
-  /* Основной блок информации */
+
   .info-block {
     position: relative;
     background-color: white;
@@ -351,7 +350,7 @@ function onFileChange(e) {
     justify-content: space-between;
   }
 
-  /* Новый контейнер с аватаркой и текстом */
+
   .avatar-info {
     display: flex;
     align-items: center;
@@ -365,7 +364,6 @@ function onFileChange(e) {
     margin-left: 0.5rem;
   }
   
-  /* Стили для заголовка с иконкой */
   .title-with-icon {
     display: flex;
     align-items: center;
@@ -383,7 +381,7 @@ function onFileChange(e) {
   .check-icon {
     width: 20px;
     height: 20px;
-    color: #22c55e; /* зеленый */
+    color: #22c55e; 
   }
   
   .subtitle {
@@ -536,7 +534,6 @@ button:hover {
     color: #111827;
   }
   
-  /* Социальные ссылки */
   .social-links {
     margin-top: 3rem;
     margin-bottom: 2rem;
