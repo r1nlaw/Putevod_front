@@ -58,7 +58,8 @@ async function loadLandmark(categories = selectedCategories.value) {
       return;
     }
 
-    const newPlaces = landmarks.map(element => ({
+    const newPlaces = landmarks.data.map(element => ({
+
       id: element.id,
       title: element.name,
       address: element.address,
@@ -68,7 +69,7 @@ async function loadLandmark(categories = selectedCategories.value) {
       price: element.price ?? '',
       rating: element.rating ?? '',
       reviews: element.reviews ?? '',
-      image: `${domain}/images/${element.image_path}`,
+      image: `${domain}/${element.images[0].large_path}`,
       weathers: element.weathers,
       likes: element.likes ?? 0,
       comments: element.comments ?? 0

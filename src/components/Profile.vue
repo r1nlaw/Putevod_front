@@ -2,11 +2,11 @@
   <div class="container">
     <!-- Баннер -->
     <div
-      class="banner"
-      :style="{ backgroundImage: `url('https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=1470&q=80')` }"
+        class="banner"
+        :style="{ backgroundImage: `url('https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=1470&q=80')` }"
     >
       <label v-if="isEditing" class="avatar-upload">
-        <input type="file" @change="onFileChange" hidden />
+        <input type="file" accept="image/*" @change="onFileChange" hidden />
         <img :src="getAvatarSrc" alt="Аватар" class="avatar editable" />
       </label>
       <img v-else :src="getAvatarSrc" alt="Аватар" class="avatar" />
@@ -18,34 +18,38 @@
         <div class="text-info">
           <div class="title-with-icon">
             <div v-if="isEditing">
-              <input v-model="edited.name" class="edit-input title-input" />
+              <input v-model="edited.user_name" class="edit-input title-input" placeholder="Имя пользователя" />
             </div>
-            <h1 v-else>{{ profile.name }}</h1>
+            <h1 v-else>{{ profile.user_name || 'Без имени' }}</h1>
             <svg
-              class="check-icon"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
+                class="check-icon"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                xmlns="http://www.w3.org/2000/svg"
             >
               <path
-                fill-rule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                clip-rule="evenodd"
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clip-rule="evenodd"
               />
             </svg>
           </div>
           <div v-if="isEditing">
-            <input v-model="edited.bio" class="edit-input subtitle-input" />
+            <input v-model="edited.bio" class="edit-input subtitle-input" placeholder="Биография" />
+            <input v-model="edited.country" class="edit-input" placeholder="Страна" />
+            <input v-model="edited.city" class="edit-input" placeholder="Город" />
+            <input v-model="edited.website_url" class="edit-input" placeholder="Веб-сайт" />
+            <input v-model="edited.gender" class="edit-input" placeholder="Пол" />
           </div>
           <p v-else class="subtitle">
-            {{ profile.bio }} <span class="emoji">💀</span>
+            {{ profile.bio || 'Нет биографии' }} <span class="emoji">💀</span>
           </p>
           <p class="readers-count">
             <svg
-              class="icon-message"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
+                class="icon-message"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                xmlns="http://www.w3.org/2000/svg"
             >
               <path d="M2 5a2 2 0 012-2h12a2 2 0 012 2v6a2 2 0 01-2 2H6l-4 4V5z" />
             </svg>
@@ -64,22 +68,33 @@
 
       <div class="info-grid">
         <div>
-          <h3>Описание</h3>
+          <h3>Информация</h3>
           <div v-if="isEditing">
-            <textarea v-model="edited.description" class="edit-input description-input"></textarea>
+            <textarea v-model="edited.bio" class="edit-input description-input" placeholder="Биография"></textarea>
           </div>
-          <p v-else>{{ profile.description }}</p>
+          <div v-else>
+            <p><strong>Страна:</strong> {{ profile.country || 'Не указана' }}</p>
+            <p><strong>Город:</strong> {{ profile.city || 'Не указан' }}</p>
+            <p><strong>Веб-сайт:</strong> {{ profile.website_url || 'Не указан' }}</p>
+            <p><strong>Пол:</strong> {{ profile.gender || 'Не указан' }}</p>
+          </div>
         </div>
 
-        <!-- Вынесенный блок с местоположением и категорией -->
         <div class="location-category">
           <div class="location">
             <h3>Местоположение</h3>
-            <p>Астана, Казахстан</p>
+            <p v-if="isEditing">
+              <input v-model="edited.city" class="edit-input" placeholder="Город" />
+              <input v-model="edited.country" class="edit-input" placeholder="Страна" />
+            </p>
+            <p v-else>{{ profile.city || 'Астана' }}, {{ profile.country || 'Казахстан' }}</p>
           </div>
           <div class="category">
             <h3>Категория</h3>
-            <p>Пешие путешествия</p>
+            <p v-if="isEditing">
+              <input v-model="edited.category" class="edit-input" placeholder="Категория" />
+            </p>
+            <p v-else>{{ profile.category || 'Пешие путешествия' }}</p>
           </div>
         </div>
       </div>
@@ -100,37 +115,40 @@ const isEditing = ref(false)
 const router = useRouter()
 
 const profile = reactive({
-  photo: '',
-  name: 'r1nlaw',
-  bio: 'asfasfqwssdxzvzx',
-  description: 'asfasfasfasfqwfas',
+  user_id: null,
+  user_name: '',
+  bio: '',
+  city: '',
+  country: '',
+  website_url: '',
+  gender: '',
+  avatar_url: '',
+  category: '',
   rating: 0,
   routes: []
 })
 
 const edited = reactive({
-  photo: '',
-  name: '',
+  user_name: '',
   bio: '',
-  description: ''
+  city: '',
+  country: '',
+  website_url: '',
+  gender: '',
+  avatar: null,
+  category: ''
 })
 
 const domain = import.meta.env.VITE_BACKEND_URL
 
 onMounted(async () => {
-  const token = localStorage.getItem("token")
-  const user_id = localStorage.getItem("user_id")
-  const isAuthenticated = !!token
+  const token = localStorage.getItem('token')
+  const user_id = localStorage.getItem('user_id')
 
-  if (!isAuthenticated) {
-    console.warn('Токен отсутствует, пользователь не аутентифицирован')
+  if (!token || !user_id) {
+    console.warn('Токен или user_id отсутствует')
     alert('Пожалуйста, войдите в систему')
-    return
-  }
-
-  if (!user_id) {
-    console.warn('user_id отсутствует в localStorage')
-    alert('Ошибка: Не удалось найти user_id. Пожалуйста, войдите снова.')
+    router.push('/login')
     return
   }
 
@@ -145,131 +163,160 @@ onMounted(async () => {
 
     if (!response.ok) {
       const errorData = await response.json()
-      throw new Error(errorData.message || errorData.error || 'Не удалось загрузить профиль')
+      if (response.status === 401) {
+        alert('Сессия истекла. Пожалуйста, войдите снова.')
+        localStorage.removeItem('token')
+        localStorage.removeItem('user_id')
+        router.push('/login')
+        return
+      }
+      throw new Error(errorData.message || 'Не удалось загрузить профиль')
     }
 
     const responseData = await response.json()
-    console.log('Ответ сервера /user/profile:', responseData)
+    const data = responseData.data || responseData
 
-    const data = responseData.data || responseData 
-
-    profile.name = data.username || data.user?.username || localStorage.getItem("username") || ''
-    profile.bio = data.user_bio || data.user?.user_bio || 'Люблю путешествовать и открывать новые маршруты!'
-    profile.description = data.description || data.user?.description || ''
-    profile.photo = data.avatar || data.user?.avatar || ''
-    profile.rating = data.rating || data.user?.rating || 4.7
-    profile.routes = data.routes || data.user?.routes || [
+    // Заполнение профиля
+    profile.user_id = data.user_id || user_id
+    profile.user_name = data.user_name || localStorage.getItem('username') || ''
+    profile.bio = data.bio || 'Люблю путешествовать и открывать новые маршруты!'
+    profile.city = data.city || ''
+    profile.country = data.country || ''
+    profile.website_url = data.website_url || ''
+    profile.gender = data.gender || ''
+    profile.avatar_url = data.avatar_url ? `${domain}/assets/avatars/${data.avatar_url}` : ''
+    profile.category = data.category || 'Пешие путешествия'
+    profile.rating = data.rating || 4.7
+    profile.routes = data.routes || [
       { id: 1, name: 'Крымская тропа' },
       { id: 2, name: 'Пеший маршрут по горам' },
       { id: 3, name: 'Велоэкскурсия по городу' }
     ]
 
-    const newUserId = data.user?.id || data.user_id
-    if (newUserId) {
-      localStorage.setItem("user_id", newUserId)
-      console.log('user_id сохранен:', newUserId)
-    } else {
-      console.warn('user_id отсутствует в ответе сервера:', data)
-    }
-
-    edited.name = profile.name
-    edited.bio = profile.bio
-    edited.description = profile.description
-    edited.photo = profile.photo
+    // Инициализация полей редактирования
+    Object.assign(edited, {
+      user_name: profile.user_name,
+      bio: profile.bio,
+      city: profile.city,
+      country: profile.country,
+      website_url: profile.website_url,
+      gender: profile.gender,
+      avatar: null,
+      category: profile.category
+    })
   } catch (err) {
     console.error('Ошибка при загрузке профиля:', err)
     alert('Не удалось загрузить профиль: ' + err.message)
   }
 })
-
 const getAvatarSrc = computed(() => {
-  const base64 = edited.photo || profile.photo
-  return base64 ? `data:image/jpeg;base64,${base64}` : avatarImage
+  if (edited.avatar) {
+    return URL.createObjectURL(edited.avatar) // Предпросмотр загруженного файла
+  }
+  return profile.avatar_url || avatarImage
 })
 
 async function toggleEdit() {
-  const token = localStorage.getItem("token")
-  const user_id = localStorage.getItem("user_id")
-  const isAuthenticated = !!token
+  const token = localStorage.getItem('token')
+  const user_id = localStorage.getItem('user_id')
 
-  if (!isAuthenticated) {
+  if (!token || !user_id) {
     alert('Пожалуйста, войдите в систему')
-    return
-  }
-
-  if (!user_id) {
-    console.warn('user_id отсутствует в localStorage')
-    alert('Ошибка: Не удалось найти user_id. Пожалуйста, войдите снова.')
+    router.push('/login')
     return
   }
 
   if (isEditing.value) {
     try {
-      const formData = new FormData();
-      formData.append('user_id', user_id);
-      formData.append('user_name', edited.name);
-      formData.append('country', edited.country);
-      formData.append('cite', edited.cite);
-      formData.append('bio', edited.bio);
-      formData.append('website_url', edited.website_url);
-      formData.append('gender', edited.gender);
-      formData.append('description', edited.description);
-      if (edited.photo instanceof File) {
-        formData.append('avatar', edited.photo);
+      const formData = new FormData()
+      formData.append('user_id', user_id)
+      formData.append('user_name', edited.user_name || '')
+      formData.append('bio', edited.bio || '')
+      formData.append('country', edited.country || '')
+      formData.append('city', edited.city || '') // Используем "city" вместо "cite"
+      formData.append('website_url', edited.website_url || '')
+      formData.append('gender', edited.gender || '')
+      if (edited.avatar instanceof File) {
+        formData.append('avatar', edited.avatar)
       }
+
+      console.log('Отправляем FormData:', [...formData.entries()]) // Отладка
 
       const response = await fetch(`${domain}/user/profile/change/${user_id}`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`
         },
         body: formData
       })
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.message || errorData.error || 'Ошибка при сохранении профиля')
+        if (response.status === 401) {
+          alert('Сессия истекла. Пожалуйста, войдите снова.')
+          localStorage.removeItem('token')
+          localStorage.removeItem('user_id')
+          router.push('/login')
+          return
+        }
+        throw new Error(errorData.message || 'Ошибка при сохранении профиля')
       }
 
-      profile.name = edited.name
-      profile.bio = edited.bio
-      profile.description = edited.description
-      if (edited.photo) profile.photo = edited.photo
+      const responseData = await response.json()
+      const data = responseData.data || responseData
+
+      // Обновление профиля
+      Object.assign(profile, {
+        user_name: edited.user_name,
+        bio: edited.bio,
+        city: edited.city,
+        country: edited.country,
+        website_url: edited.website_url,
+        gender: edited.gender,
+        avatar_url: data.avatar_url ? `${domain}/assets/avatars/${data.avatar_url}` : profile.avatar_url,
+        category: edited.category
+      })
+
+      edited.avatar = null // Сброс файла аватара
     } catch (err) {
       console.error('Ошибка при сохранении профиля:', err)
-      alert(err.message)
+      alert('Ошибка при сохранении профиля: ' + err.message)
     }
   } else {
-    edited.name = profile.name
-    edited.bio = profile.bio
-    edited.description = profile.description
-    edited.photo = profile.photo
+    // Вход в режим редактирования
+    Object.assign(edited, {
+      user_name: profile.user_name,
+      bio: profile.bio,
+      city: profile.city,
+      country: profile.country,
+      website_url: profile.website_url,
+      gender: profile.gender,
+      avatar: null,
+      category: profile.category
+    })
   }
 
   isEditing.value = !isEditing.value
 }
-
 function onFileChange(e) {
-  const token = localStorage.getItem("token")
-  const isAuthenticated = !!token
-
-  if (!isAuthenticated) {
+  const token = localStorage.getItem('token')
+  if (!token) {
     alert('Пожалуйста, войдите в систему')
     return
   }
 
   const file = e.target.files[0]
   if (file) {
-    const reader = new FileReader()
-    reader.onload = () => {
-      const base64 = reader.result.split(',')[1] 
-      edited.photo = base64
+    // Проверка размера файла (5 МБ = 5 * 1024 * 1024 байт)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Файл слишком большой. Максимальный размер: 5 МБ.')
+      return
     }
-    reader.readAsDataURL(file)
+    edited.avatar = file // Сохраняем объект File
   }
 }
 </script>
-  
+
   <style scoped>
   .container {
     max-width: 92rem;
@@ -295,19 +342,19 @@ function onFileChange(e) {
   }
   .edit-input.description-input {
     resize: none;
-    width: 100%; 
+    width: 100%;
   }
-  
+
   .banner {
     position: relative;
     background-size: cover;
     background-position: center;
     border-radius: 2rem;
-    overflow: visible; 
-    margin-bottom: -0.0rem; 
+    overflow: visible;
+    margin-bottom: -0.0rem;
     height: 220px;
   }
-  
+
   .avatar {
     position: absolute;
     left: 1.5rem;
@@ -332,7 +379,7 @@ function onFileChange(e) {
     box-shadow: 0 0 6px rgba(0, 0, 0, 0.15);
     flex-shrink: 0;
   }
-  
+
 
   .info-block {
     position: relative;
@@ -342,7 +389,7 @@ function onFileChange(e) {
     padding-top: 0.1rem;
     margin-bottom: 1.9rem;
   }
-  
+
   .info-header {
     display: flex;
     flex-direction: column;
@@ -357,33 +404,33 @@ function onFileChange(e) {
     gap: 1rem;
     flex: 1;
   }
-  
+
   .text-info {
     display: flex;
     flex-direction: column;
     margin-left: 0.5rem;
   }
-  
+
   .title-with-icon {
     display: flex;
     align-items: center;
     margin-left: 9.7rem;
     gap: 0.5rem;
   }
-  
+
   h1 {
     font-size: 1.875rem;
     font-weight: 700;
     color: #111827;
     margin: 0;
   }
-  
+
   .check-icon {
     width: 20px;
     height: 20px;
-    color: #22c55e; 
+    color: #22c55e;
   }
-  
+
   .subtitle {
     color: #4b5563;
     margin-top: -0.5rem;
@@ -391,11 +438,11 @@ function onFileChange(e) {
     line-height: 1.4;
     margin-left: 9.7rem;
   }
-  
+
   .emoji {
     font-size: 1.25rem;
   }
-  
+
   .readers-count {
     color: #6b7280;
     margin-top: 0.25rem;
@@ -405,13 +452,13 @@ function onFileChange(e) {
     align-items: center;
     gap: 0.25rem;
   }
-  
+
   .icon-message {
     width: 16px;
     height: 16px;
     color: #9ca3af;
   }
-  
+
 .buttons-group {
   position: absolute;
   top: 1rem;
@@ -429,15 +476,15 @@ button {
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
-  
+
 button:hover {
     background-color: #e5e7eb;
 }
-  
-  
+
+
 .info-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr; 
+  grid-template-columns: 2fr 1fr;
   gap: 2rem;
   margin-top: 2rem;
   color: #374151;
@@ -500,17 +547,17 @@ button:hover {
   button {
     padding: 0.3rem 0.5rem;
     font-size: 0.8rem;
-    
+
   }
   .info-block {
     padding: 0rem;
   }
 
-  
+
 
 }
 
-  
+
 @media (max-width: 640px) {
   .info-grid {
     grid-template-columns: 2fr 1fr;
@@ -526,14 +573,14 @@ button:hover {
     margin-left: -8%;
   }
 }
-  
-  
+
+
   h3 {
     margin: 0 0 0.25rem 0;
     font-weight: 600;
     color: #111827;
   }
-  
+
   .social-links {
     margin-top: 3rem;
     margin-bottom: 2rem;
@@ -542,7 +589,7 @@ button:hover {
     gap: 1rem;
     flex-wrap: wrap;
   }
-  
+
   .social-link {
     display: flex;
     align-items: center;
@@ -556,47 +603,47 @@ button:hover {
     max-width: 320px;
     transition: box-shadow 0.2s ease;
   }
-  
+
   .social-link:hover {
     box-shadow: 0 4px 6px rgb(0 0 0 / 0.15);
   }
-  
+
   .social-icon {
     width: 30px;
     height: 30px;
     margin-right: 0.75rem;
     object-fit: contain;
   }
-  
+
   .social-text {
     display: flex;
     flex-direction: column;
     justify-content: center;
   }
-  
+
   .social-text .name {
     font-weight: 700;
     font-size: 1rem;
     line-height: 1.25;
   }
-  
+
   .social-text .subs {
     font-size: 0.875rem;
     color: #6b7280;
   }
-  
+
   .social-link.youtube:hover {
     box-shadow: 0 0 10px #ff0000aa;
   }
-  
+
   .social-link.twitch:hover {
     box-shadow: 0 0 10px #9146ffaa;
   }
-  
+
   .social-link.vk:hover {
     box-shadow: 0 0 10px #4a76a8aa;
   }
-  
+
   .add-button {
     justify-content: center;
     color: #2563eb;
@@ -604,11 +651,10 @@ button:hover {
     background-color: transparent;
     max-width: 100px;
   }
-  
+
   .add-icon {
     width: 24px;
     height: 24px;
     margin-right: 0.5rem;
   }
   </style>
-  
