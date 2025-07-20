@@ -13,7 +13,7 @@ const routes = [
     component: Profile
   },
   {
-    path: '/landmark/:name',
+    path: '/landmarks/:name',
     name: 'LandmarkPage',
     component: LandmarkPage,
     props: true,

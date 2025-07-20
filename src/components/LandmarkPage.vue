@@ -1,25 +1,18 @@
-```vue
 <template>
   <div class="landmark-page">
-    <!-- Показываем индикатор загрузки -->
     <div v-if="loading" class="loading">Загрузка...</div>
-    <!-- Показываем ошибку, если она есть -->
     <div v-else-if="error" class="error">{{ error }}</div>
-    <!-- Показываем содержимое, только если данные загружены -->
     <div v-else-if="landmark" class="landmark-card">
-      <!-- Верхняя часть: картинка + краткая информация -->
       <div class="landmark-top">
-        <!-- Левая колонка: картинка -->
         <div class="image-placeholder">
-          <img :src="domain + '/images/' + landmark.image_path" alt="Фото" v-if="landmark.image_path" />
+          <img :src="domain + '/' + landmark.data.images[0].large_path" alt="Фото" v-if="landmark?.data?.images?.length && landmark.data.images[0]?.large_path" />
         </div>
 
-        <!-- Правая колонка: название, теги, краткие сведения и часть описания -->
         <div class="landmark-info">
-          <h1 class="landmark-title">{{ landmark.name }}</h1>
+          <h1 class="landmark-title">{{ landmark.data.name }}</h1>
 
           <div class="landmark-tags">
-            <span class="tag">🏛️ {{ landmark.category }}</span>
+            <span class="tag">🏛️ {{ landmark.data.category }}</span>
           </div>
 
           <div class="landmark-tabs">
@@ -28,7 +21,6 @@
             <span>Посещений</span>
           </div>
 
-          <!-- Часть описания рядом с картинкой -->
           <div class="landmark-description-block">
             <h2 class="description-title">Описание</h2>
             <p class="landmark-description description-text">
@@ -38,21 +30,18 @@
         </div>
       </div>
 
-      <!-- Нижняя часть: остаток описания, история и цены -->
       <div class="landmark-details">
-        <!-- Остаток описания, если текст длинный -->
         <p v-if="remainingDescription" class="landmark-description">
           {{ remainingDescription }}
         </p>
 
-        <!-- История -->
         <h2 class="description-title">История</h2>
-        <p class="landmark-description">{{ landmark.history }}</p>
+        <p class="landmark-description">{{ landmark.data.history }}</p>
 
-        <div v-if="landmark && landmark.prices && landmark.prices.length">
+        <div v-if="landmark && landmark.data.prices && landmark.data.prices.length">
           <h2 class="description-title">Цены</h2>
           <ul>
-            <li v-for="price in landmark.prices" :key="price.id">
+            <li v-for="price in landmark.data.prices" :key="price.id">
               {{ price.description }}: {{ price.amount }} ₽
             </li>
           </ul>
@@ -72,27 +61,22 @@ const loading = ref(false)
 const error = ref(null)
 const domain = import.meta.env.VITE_BACKEND_URL;
 
-// Вычисляемые свойства для разбиения текста по целому слову
 const firstPartDescription = computed(() => {
-  if (!landmark.value || !landmark.value.description) return ''
+  if (!landmark.value || !landmark.value.data.description) return ''
   const maxLength = 700
-  const text = landmark.value.description
+  const text = landmark.value.data.description
   if (text.length <= maxLength) return text
-  // Находим последний пробел перед maxLength
   const lastSpaceIndex = text.lastIndexOf(' ', maxLength)
-  // Если пробел не найден, используем maxLength
   const splitIndex = lastSpaceIndex > 0 ? lastSpaceIndex : maxLength
   return text.slice(0, splitIndex)
 })
 
 const remainingDescription = computed(() => {
-  if (!landmark.value || !landmark.value.description) return ''
+  if (!landmark.value || !landmark.value.data.description) return ''
   const maxLength = 700
-  const text = landmark.value.description
+  const text = landmark.value.data.description
   if (text.length <= maxLength) return ''
-  // Находим последний пробел перед maxLength
   const lastSpaceIndex = text.lastIndexOf(' ', maxLength)
-  // Если пробел не найден, используем maxLength
   const splitIndex = lastSpaceIndex > 0 ? lastSpaceIndex : maxLength
   return text.slice(splitIndex).trim()
 })
@@ -102,7 +86,7 @@ const fetchLandmark = async () => {
   error.value = null
 
   try {
-    const response = await fetch(`${domain}/api/landmark/${encodeURIComponent(route.params.name)}`, {
+    const response = await fetch(`${domain}/landmarks/${encodeURIComponent(route.params.name)}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
     })

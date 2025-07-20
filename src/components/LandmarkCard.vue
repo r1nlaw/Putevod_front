@@ -2,7 +2,7 @@
   <div
     class="landmark-card"
     :class="{ selected: isSelected, 'wide-card': props.sidebarOpened }"
-    @click="goToLandmark(translated_name)"
+    @click="goToLandmark(url)"
   >
     <img :src="image" class="landmark-image" alt="Фото" />
     <div class="landmark-content">
@@ -59,16 +59,16 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
-function goToLandmark(nameTranslate) {
-  if (!nameTranslate) return
-  router.push(`/landmark/${encodeURIComponent(nameTranslate)}`)
+function goToLandmark(url) {
+  if (!url) return
+  router.push(`/landmarks/${encodeURIComponent(url)}`)
 }
 
 const props = defineProps({
   id: [String, Number],
   image: String,
   title: String,
-  translated_name: String,
+  url: String,
   address: String,
   likes: Number,
   comments: Number,
@@ -90,7 +90,6 @@ const displayAddress = computed(() => {
 const isSelected = ref(false)
 
 onMounted(() => {
-  // Check if the card is in localStorage to set initial isSelected state
   const savedPlaces = JSON.parse(localStorage.getItem('selectedPlaces') || '[]')
   isSelected.value = savedPlaces.some(p => p.id === props.id)
 })
@@ -101,16 +100,14 @@ function toggleSelection() {
     id: props.id,
     name: props.title,
     image: props.image,
-    distance: props.address // Using address as distance for simplicity; adjust as needed
+    distance: props.address 
   }
 
   if (isSelected.value) {
-    // Remove from localStorage
     const updatedPlaces = savedPlaces.filter(p => p.id !== props.id)
     localStorage.setItem('selectedPlaces', JSON.stringify(updatedPlaces))
     isSelected.value = false
   } else {
-    // Add to localStorage
     savedPlaces.push(place)
     localStorage.setItem('selectedPlaces', JSON.stringify(savedPlaces))
     isSelected.value = true

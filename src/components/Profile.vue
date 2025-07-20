@@ -42,7 +42,7 @@
             <input v-model="edited.gender" class="edit-input" placeholder="Пол" />
           </div>
           <p v-else class="subtitle">
-            {{ profile.bio || 'Нет биографии' }} <span class="emoji">💀</span>
+            {{ profile.bio || 'Нет биографии' }} <span class="emoji"></span>
           </p>
           <p class="readers-count">
             <svg

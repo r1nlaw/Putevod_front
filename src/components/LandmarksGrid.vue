@@ -63,7 +63,7 @@ async function loadLandmark(categories = selectedCategories.value) {
       id: element.id,
       title: element.name,
       address: element.address,
-      translated_name: element.translated_name,
+      url: element.url,
       category: element.category,
       time: element.time ?? '',
       price: element.price ?? '',
@@ -117,7 +117,7 @@ function handleScroll() {
   const scrollY = window.scrollY || window.pageYOffset;
   const windowHeight = window.innerHeight;
   const docHeight = document.documentElement.scrollHeight;
-  if (scrollY + windowHeight >= docHeight - 300) {
+  if (scrollY + windowHeight >= docHeight - 10) {
     loadLandmark();
   }
 }

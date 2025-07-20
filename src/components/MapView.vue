@@ -98,7 +98,7 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
     } else {
       // Загрузка достопримечательностей по bounds карты
       const bounds = targetMap.getBounds().toArray();
-      const response = await fetch(`${domain}/api/facilities`, {
+      const response = await fetch(`${domain}/landmarks/facilities`, {
         method: 'POST',
         body: JSON.stringify({
           sw: { lng: bounds[0][0], lat: bounds[0][1] },
