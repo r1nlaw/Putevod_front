@@ -4,9 +4,8 @@
     <div class="header__logo">
       <div class="header__logo-img">
         <router-link to="/" class="header__logo-img">
-          <img src="/src/assets/logo.png" alt="logo" />
+          <img src="/src/assets/logo.png" alt="Логотип Путевод" />
         </router-link>
-        
       </div>
       <div class="header__logo-text">
         <div class="header__logo-subtitle">достопримечательности</div>
@@ -17,107 +16,300 @@
     </div>
     <div class="header__center" :class="{ 'header__center--sidebar': sidebarOpen }">
       <div class="header__search">
-        <input type="text" placeholder="поиск" />
-        <img :src="search_icon" alt="search" class="header__search-icon" />
+        <input
+          type="text"
+          placeholder="поиск"
+          v-model="searchQuery"
+          @keyup.enter="handleSearch"
+          @input="debouncedSearch"
+          aria-label="Поиск достопримечательностей"
+          ref="searchInput"
+        />
+        <img
+          :src="search_icon"
+          alt="Иконка поиска"
+          class="header__search-icon"
+          @click="handleSearch"
+        />
+        <div v-if="isLoading" class="search-loading">Загрузка...</div>
+        <div v-else-if="errorMessage" class="search-error">{{ errorMessage }}</div>
+        <div v-else-if="showSearchResults && searchResults.length" class="search-results" role="listbox">
+          <ul>
+            <li
+              v-for="landmark in searchResults"
+              :key="landmark.id"
+              @click="goToLandmark(landmark.url)"
+              role="option"
+              :aria-label="landmark.name"
+            >
+              <div class="result-item">
+                <img
+                  :src="getImageUrl(landmark.images?.[0]?.thumbnail_path)"
+                  alt="Изображение достопримечательности"
+                  class="result-image"
+                  @error="handleImageError"
+                />
+                <div class="result-info">
+                  <div class="result-name">{{ landmark.name }}</div>
+                  <div class="result-address">{{ landmark.address || 'Адрес не указан' }}</div>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+        <div v-else-if="showSearchResults && !searchResults.length" class="search-no-results">
+          Ничего не найдено
+        </div>
       </div>
-
       <div class="header__actions">
         <router-link to="/routeList" class="header__counter-router">
           <div class="header__counter">
             <div class="header__circle">{{ selectedCount }}</div>
-          <img :src="directionsIcon" alt="directions" class="header__arrow" />
-        </div>
+            <img :src="directionsIcon" alt="Маршруты" class="header__arrow" />
+          </div>
         </router-link>
-
         <div class="header__message">
           <button class="header__button">
-            <img :src="messageIcon" alt="messages" />
+            <img :src="messageIcon" alt="Сообщения" />
           </button>
         </div>
-
         <RegisterModal ref="registerModal" @close="closeModal" />
         <div class="header__avatar-wrapper" @click="handleProfileClick">
           <div class="header__avatar">A</div>
           <button class="header__arrow-btn">
-            <img :src="arrow" alt="arrow" />
+            <img :src="arrow" alt="Меню профиля" />
           </button>
         </div>
-
       </div>
     </div>
-    
   </header>
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount  } from 'vue'
-import { useRouter } from 'vue-router'
-import messageIcon from '@/assets/icons/messages.png'
-import arrow from '@/assets/icons/arrow.png'
-import search_icon from '@/assets/icons/search_icon.png'
-import directionsIcon from '@/assets/icons/directions.png'
-import RegisterModal from '@/components/RegisterModal.vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { useRouter } from 'vue-router';
+import { debounce } from 'lodash'; 
+import messageIcon from '@/assets/icons/messages.png';
+import arrow from '@/assets/icons/arrow.png';
+import search_icon from '@/assets/icons/search_icon.png';
+import directionsIcon from '@/assets/icons/directions.png';
+import RegisterModal from '@/components/RegisterModal.vue';
 
 const props = defineProps({
   sidebarOpen: Boolean,
-})
+});
 
-const registerModal = ref(null)
-const router = useRouter()
+const registerModal = ref(null);
+const router = useRouter();
+const searchQuery = ref('');
+const searchResults = ref([]);
+const showSearchResults = ref(false);
+const isLoading = ref(false);
+const errorMessage = ref('');
+const selectedCount = ref(0);
+const searchInput = ref(null);
+const domain = import.meta.env.VITE_BACKEND_URL;
+const fallbackImage = '/src/assets/fallback-image.png';
 
-
-const selectedCount = ref(0)
+// Дебонсим функцию handleSearch с задержкой 300 мс
+const debouncedSearch = debounce(handleSearch, 300);
 
 onMounted(() => {
-  updateSelectedCount()
-  window.addEventListener('storage', updateSelectedCount)
-  window.addEventListener('selectedPlacesUpdated', updateSelectedCount)
-})
+  updateSelectedCount();
+  window.addEventListener('storage', updateSelectedCount);
+  window.addEventListener('selectedPlacesUpdated', updateSelectedCount);
+  document.addEventListener('click', handleClickOutside);
+});
+
 onBeforeUnmount(() => {
-  window.removeEventListener('storage', updateSelectedCount)
-  window.removeEventListener('selectedPlacesUpdated', updateSelectedCount)
-})
+  window.removeEventListener('storage', updateSelectedCount);
+  window.removeEventListener('selectedPlacesUpdated', updateSelectedCount);
+  document.removeEventListener('click', handleClickOutside);
+  debouncedSearch.cancel(); // Отменяем дебонсинг при размонтировании
+});
+
+async function handleSearch() {
+  if (!searchQuery.value.trim()) {
+    searchResults.value = [];
+    showSearchResults.value = false;
+    errorMessage.value = '';
+    return;
+  }
+
+  isLoading.value = true;
+  errorMessage.value = '';
+  showSearchResults.value = false;
+
+  try {
+    const response = await fetch(`${domain}/landmarks/search?q=${encodeURIComponent(searchQuery.value)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || errorData.error || 'Ошибка при поиске');
+    }
+
+    const data = await response.json();
+    searchResults.value = Array.isArray(data.data) ? data.data : data.results || data || [];
+    showSearchResults.value = true;
+  } catch (error) {
+    console.error('Ошибка поиска:', error);
+    errorMessage.value = error.message || 'Произошла ошибка при поиске';
+    searchResults.value = [];
+    showSearchResults.value = true;
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+function handleClickOutside(event) {
+  if (searchInput.value && !searchInput.value.contains(event.target)) {
+    showSearchResults.value = false;
+    errorMessage.value = '';
+  }
+}
+
+function goToLandmark(url) {
+  router.push(`/landmarks/${encodeURIComponent(url)}`);
+  showSearchResults.value = false;
+  searchQuery.value = '';
+}
+
+function getImageUrl(imagePath) {
+  if (!imagePath) return fallbackImage;
+  return imagePath.startsWith('/')
+    ? `${domain}/${imagePath}`
+    : `${domain}/${imagePath}`;
+}
+
+function handleImageError(event) {
+  event.target.src = fallbackImage;
+}
 
 function updateSelectedCount() {
-  const data = localStorage.getItem('selectedPlaces')
+  const data = localStorage.getItem('selectedPlaces');
   if (data) {
     try {
-      const arr = JSON.parse(data)
-      selectedCount.value = Array.isArray(arr) ? arr.length : 0
+      const arr = JSON.parse(data);
+      selectedCount.value = Array.isArray(arr) ? arr.length : 0;
     } catch {
-      selectedCount.value = 0
+      selectedCount.value = 0;
     }
   } else {
-    selectedCount.value = 0
+    selectedCount.value = 0;
   }
 }
 
 function openRegisterModal() {
   if (registerModal.value) {
-    registerModal.value.open()
+    registerModal.value.open();
   }
 }
 
 function closeModal() {
-  console.log('Register modal closed')
+  console.log('Register modal closed');
 }
 
 function handleProfileClick() {
-  const token = localStorage.getItem('token')
-
+  const token = localStorage.getItem('token');
   if (token) {
-    router.push('/profile')
+    router.push('/profile');
   } else {
-    openRegisterModal()
+    openRegisterModal();
   }
 }
-
 </script>
+
 <style scoped>
-.header__search img {
-  width: 22px;
-  height: 22px;
+
+.search-results,
+.search-loading,
+.search-error,
+.search-no-results {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 470px;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  margin-top: 6px;
+  max-height: 360px;
+  overflow-y: auto;
+  z-index: 1000;
 }
+
+.search-results ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.search-results li {
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.search-results li:hover {
+  background: #f0f0f0;
+}
+
+.search-loading {
+  padding: 12px;
+  text-align: center;
+  color: #333;
+}
+
+.search-error {
+  padding: 12px;
+  text-align: center;
+  color: #d32f2f;
+  background: #ffe6e6;
+}
+
+.search-no-results {
+  padding: 12px;
+  text-align: center;
+  color: #666;
+}
+
+.result-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.result-image {
+  width: 55px;
+  height: 55px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.result-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.result-name {
+  font-weight: 600;
+  font-size: 16px;
+  color: #333;
+}
+
+.result-address,
+.result-category {
+  font-size: 14px;
+  color: #666;
+}
+
+/* Остальные стили */
 .header {
   display: flex;
   align-items: center;
@@ -141,6 +333,7 @@ function handleProfileClick() {
   gap: 12px;
   margin-right: 32px;
 }
+
 .header__logo-img {
   max-width: 45px;
   max-height: 45px;
@@ -164,12 +357,12 @@ function handleProfileClick() {
   filter: brightness(0) invert(1);
 }
 
-
 .header__logo-text {
   display: flex;
   flex-direction: column;
   line-height: 1;
 }
+
 .header__logo-title {
   font-size: 32px;
   font-weight: 700;
@@ -180,6 +373,7 @@ function handleProfileClick() {
   text-decoration: none;
   cursor: pointer;
 }
+
 .header__logo-subtitle {
   font-size: 9px;
   color: #2d4834;
@@ -187,37 +381,42 @@ function handleProfileClick() {
   margin-top: -4px;
   margin-left: 2px;
 }
+
 .header__center {
   display: flex;
   align-items: center;
   background: #fff;
   border-radius: 32px;
   padding: 8px 24px 8px 8px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
   flex: 1;
   min-width: 0;
   justify-content: space-between;
-  transition: max-width 0.4s cubic-bezier(.77,0,.18,1);
+  transition: max-width 0.4s cubic-bezier(0.77, 0, 0.18, 1);
   max-width: 100vw;
 }
+
 .header__center--sidebar {
   max-width: calc(100vw - 250px);
 }
+
 .header__search {
   position: relative;
   flex: 1;
   max-width: 470px;
   margin-right: 24px;
 }
+
 .header__search input {
   width: 100%;
-  padding: 10px 20px 10px 44px; 
+  padding: 10px 20px 10px 44px;
   border: none;
   border-radius: 24px;
   background: #f7f7f7;
   font-size: 18px;
   color: #333;
 }
+
 .header__search-icon {
   position: absolute;
   left: 16px;
@@ -225,7 +424,6 @@ function handleProfileClick() {
   transform: translateY(-50%);
   width: 22px;
   height: 22px;
-  pointer-events: none;
 }
 
 #burger-target {
@@ -248,27 +446,28 @@ function handleProfileClick() {
   cursor: pointer;
 }
 
-.header__message{
+.header__message {
   border-radius: 20px;
-  
 }
+
 .header__counter-router {
   text-decoration: none;
   background: #ffffffd5;
 }
 
 .header__button img {
-  width: 24px;  
+  width: 24px;
   height: 24px;
   object-fit: contain;
-  pointer-events: none; 
   background: #f7f7f7d5;
 }
+
 .header__actions {
   display: flex;
   align-items: center;
   gap: 16px;
 }
+
 .header__counter {
   display: flex;
   align-items: center;
@@ -278,7 +477,7 @@ function handleProfileClick() {
   border-bottom-right-radius: 24px;
   border-top-left-radius: 20px;
   border-bottom-left-radius: 20px;
-  padding: 0 12px 0 0; /* убрали левый паддинг */
+  padding: 0 12px 0 0;
   font-size: 18px;
   font-weight: 600;
   gap: 8px;
@@ -286,11 +485,10 @@ function handleProfileClick() {
   height: 36px;
 }
 
-
 .header__circle {
   width: 37px;
   height: 36px;
-  background: #3a5f45; 
+  background: #3a5f45;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -299,20 +497,10 @@ function handleProfileClick() {
   font-weight: bold;
   color: #fff;
   flex-shrink: 0;
-  margin-left: -12px; 
+  margin-left: -12px;
   z-index: 1;
 }
 
-.header__arrow {
-  font-size: 20px;
-}
-.header__button {
-  width: 32px;
-  height: 32px;
-  background: #ffffff;
-  border: none;
-  border-radius: 50%;
-}
 .header__avatar {
   width: 36px;
   height: 36px;
@@ -325,6 +513,7 @@ function handleProfileClick() {
   font-size: 20px;
   font-weight: 700;
 }
+
 .header__arrow-btn {
   width: 32px;
   height: 32px;
@@ -335,6 +524,7 @@ function handleProfileClick() {
   color: #2d4834;
   font-weight: 700;
 }
+
 .header__avatar-wrapper {
   display: flex;
   align-items: center;
@@ -342,7 +532,6 @@ function handleProfileClick() {
   border-radius: 20px;
   gap: 8px;
 }
-
 
 .header__arrow-btn img {
   width: 16px;
@@ -364,6 +553,7 @@ function handleProfileClick() {
 .header__register-button:hover {
   background-color: #3a5f45;
 }
+
 @media (max-width: 900px) {
   .header {
     width: 100vw;
@@ -377,83 +567,96 @@ function handleProfileClick() {
     gap: 40px;
     box-sizing: border-box;
   }
+
   #burger-target {
     left: 38px;
     top: 11px;
     font-size: 1rem;
-    
-
   }
 
   .header__logo {
     margin-right: 4px;
     gap: 4px;
   }
+
   .header__center--sidebar {
-    max-width: 100vh;
+    max-width: 100vw;
   }
+
   .header__logo-title,
   .header__logo-subtitle {
     display: none !important;
   }
+
   .header__logo-img {
     max-width: 24px;
     max-height: 24px;
     border-radius: 6px;
   }
+
   .header__logo-img img {
     height: 27px;
   }
+
   .header__search-icon {
     width: 20px !important;
     height: 20px !important;
     left: 6px;
   }
+
   .header__button img {
     width: 27px;
     height: 27px;
   }
+
   .header__arrow {
     width: 14px;
     height: 14px;
     margin-right: 0.5vh;
   }
+
   .header__avatar {
     width: 27px;
     height: 27px;
     font-size: 10px;
   }
+
   .header__avatar-wrapper {
     gap: 2px;
     border-radius: 15px;
     width: 50px;
   }
+
   .header__arrow-btn {
     width: 12px;
     height: 19px;
     font-size: 8px;
   }
+
   .header__counter {
     font-size: 8px;
     height: 27px;
     padding: 0 2px 0 0;
     border-radius: 10px;
   }
+
   .header__circle {
     width: 27px;
     height: 27px;
     font-size: 14px;
     margin-left: -2px;
   }
+
   .header__center {
     padding: 2px 4px 2px 2px;
     border-radius: 15px;
-    
   }
+
   .header__search {
     max-width: 150px;
     margin-right: 6px;
   }
+
   .header__search input {
     font-size: 14px;
     padding: 6px 10px 6px 28px;
@@ -461,15 +664,28 @@ function handleProfileClick() {
     height: 37px;
     min-width: 0;
   }
+
   .header__actions {
     gap: 4px;
     margin-right: 1%;
   }
+
   .header__register-button {
     display: none !important;
     padding: 2px 5px;
     font-size: 9px;
     border-radius: 5px;
   }
+  .search-results {
+    left:80%;
+    width: 360px;
+  }
+  .result-address{
+    font-size: 0.6rem;
+  }
+  .result-name {
+    font-size: 0.8rem;
+  }
+  
 }
 </style>

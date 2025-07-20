@@ -45,7 +45,7 @@ const router = useRouter()
 
 
 const chips = ref([
-  { emoji: religionIcon, label: 'Религия', className: 'filter-green' },
+  { emoji: religionIcon, label: 'Религиозное', className: 'filter-green' },
   { emoji: museumIcon, label: 'Музей', className: 'filter-museam' },
   { emoji: architectureIcon, label: 'Архитектура', className: 'filter-brown' },
   { emoji: monumentIcon, label: 'Памятник', className: 'filter-orange' },
@@ -62,7 +62,6 @@ const chips = ref([
 
 const selectedChips = ref([])
 
-// Функция переключения выбора
 function toggleChip(label) {
   const index = selectedChips.value.indexOf(label)
   if (index === -1) {

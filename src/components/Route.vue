@@ -9,7 +9,6 @@
       <div class="selected-places">
         <div class="places-split">
           <div class="places-list-container">
-            <h3>Ваш маршрут</h3>
             <ul class="places-list">
               <li v-for="(place, index) in selectedPlaces" :key="place.id" class="place-item">
                 <div class="place-info">
@@ -25,6 +24,7 @@
           </div>
           <div class="route-summary">
             <div class="route-details">
+              <h3>Ваш маршрут</h3>
               <div class="route-line"></div>
               <ul class="route-list">
                 <li v-for="(place, index) in selectedPlaces" :key="place.id" class="route-item">
@@ -33,7 +33,6 @@
                   <div class="route-distance">{{ place.distance }}</div>
                 </li>
               </ul>
-              <p>Пешеходный маршрут <span class="route-duration">24 мин</span></p>
               <div class="button-action">
                 <button class="build-route-button" @click="buildRoute">Следовать</button>
                 <button class="build-route-button secondary" @click="clearRoute">Очистить маршрут</button>
@@ -47,25 +46,41 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import MapView from '@/components/MapView.vue'
 
 const selectedPlaces = ref([])
 
 onMounted(() => {
-  // Load saved places from localStorage
   const savedPlaces = JSON.parse(localStorage.getItem('selectedPlaces') || '[]')
   selectedPlaces.value = savedPlaces
+  updateRouteLine()
 })
+
+watch(selectedPlaces, () => {
+  updateRouteLine()
+})
+
+const updateRouteLine = () => {
+  const routeLine = document.querySelector('.route-line')
+  const firstDot = document.querySelector('.route-item .dot')
+  const lastDot = document.querySelector('.route-item:last-of-type .dot')
+
+  if (firstDot && lastDot && routeLine) {
+    const firstDotTop = firstDot.offsetTop
+    const lastDotBottom = lastDot.offsetTop + lastDot.offsetHeight
+    routeLine.style.top = `${firstDotTop}px`
+    routeLine.style.height = `${lastDotBottom - firstDotTop}px`
+  }
+}
 
 const removePlace = (index, id) => {
   selectedPlaces.value.splice(index, 1)
-  // Update localStorage
   localStorage.setItem('selectedPlaces', JSON.stringify(selectedPlaces.value))
 }
 
 const buildRoute = () => {
-  alert('Route built with ' + selectedPlaces.value.length + ' places!')
+  alert('Маршрут построен с ' + selectedPlaces.value.length + ' точками!')
 }
 
 const clearRoute = () => {
@@ -132,7 +147,10 @@ const clearRoute = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 0;
+  background-color: #f5f3f3;
+  border-radius: 16px;
+  margin-bottom: 5px;
+  padding: 5px;
   border-bottom: 1px solid #eee;
 }
 
@@ -143,8 +161,10 @@ const clearRoute = () => {
 }
 
 .place-image {
-  width: 50px;
-  height: 50px;
+  width: 6vw;
+  height: 100%;
+  max-width: 100px;
+  max-height: 65px;
   object-fit: cover;
   border-radius: 8px;
 }
@@ -157,8 +177,8 @@ const clearRoute = () => {
 .place-name {
   font-family: "Montserrat", sans-serif;
   font-size: 15px;
-  color: #1d1d1d;
-  font-weight: 400;
+  color: #000000;
+  font-weight: 600;
 }
 
 .place-distance {
@@ -169,14 +189,18 @@ const clearRoute = () => {
 .remove-button {
   background: none;
   border: none;
-  font-size: 18px;
+  padding: 2vh;
+  font-size: 25px;
   cursor: pointer;
   color: #1d1d1d;
 }
 
 .route-details {
   margin-bottom: 16px;
+  padding: 1vw;
   position: relative;
+  background-color: #f5f3f3;
+  border-radius: 16px;
 }
 
 .button-action {
@@ -186,11 +210,9 @@ const clearRoute = () => {
 
 .route-line {
   position: absolute;
-  left: 5px;
-  top: 19px;
-  height: 83%;
   width: 2px;
   background-color: #2d4834;
+  left: 5px; /* Выравнивание по центру точек */
 }
 
 .dot {
@@ -202,6 +224,7 @@ const clearRoute = () => {
   left: -19px;
   top: 50%;
   transform: translateY(-50%);
+  z-index: 1; /* Точки поверх линии */
 }
 
 .route-list {
@@ -264,6 +287,29 @@ p {
   .map-section {
     height: 50vh;
   }
+  .selected-places {
+    width: 100%;
+    height: 50vh;
+  }
+  .button-action {
+    width: 100%;
+  
+  }
+  .build-route-button {
+    width: 50%;
+  }
+  .route-details {
+    padding: 6px;
+  }
+  .place-name {
+    font-size: 0.8rem;
+  }
+  .place-distance {
+    font-size: 0.6rem;
+  }
+  .place-image {
+    width: 20vw;
+  }
 
   .places-split {
     flex-direction: column;
@@ -276,7 +322,7 @@ p {
   }
 
   .route-line {
-    left: -10px;
+    left: 5px;
   }
 }
 </style>
