@@ -22,7 +22,7 @@ import collapseIcon from '@/assets/icons/collapse.png';
 import routes from '@/assets/icons/routes.png';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useRouter } from 'vue-router';
-
+const defaultThumbnailPath = 'assets/landmarks/default.jpg'
 const props = defineProps({ sidebarOpen: Boolean });
 const map_style = import.meta.env.VITE_MAP_STYLE_URL;
 const domain = import.meta.env.VITE_BACKEND_URL;
@@ -84,7 +84,7 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
 
   const markerSize = isMobile.value ? 150 : 100;
   let facilities = [];
-
+  let results;
   try {
     if (selectedIds.length > 0) {
       // Загрузка достопримечательностей по ID
@@ -94,7 +94,7 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
         headers: { 'Content-Type': 'application/json' }
       });
       if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
-      facilities = await response.json();
+      results = await response.json();
     } else {
       // Загрузка достопримечательностей по bounds карты
       const bounds = targetMap.getBounds().toArray();
@@ -107,32 +107,30 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
         headers: { 'Content-Type': 'application/json' }
       });
       if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
-      facilities = await response.json();
+      results = await response.json();
     }
-
+    facilities = results.data;
     if (!facilities?.length) return;
 
     const newFeatures = await Promise.all(facilities.map(async facility => {
       const isSelected = selectedIds.includes(facility.id);
-      const imageUrl = facility.image_path
-        ? `${domain}/images/${facility.image_path}?width=${markerSize}`
-        : null;
+      const imageUrl = facility.images?.length>0? facility.images[0].thumbnail_path: defaultThumbnailPath;
+
 
       return {
         type: 'Feature',
         properties: {
           id: facility.id,
           name: facility.name,
-          translated_name: facility.translated_name,
           address: facility.address,
-          url: facility.url || '',
-          image: imageUrl,
-          markerImage: imageUrl,
+          url: `${domain}/${facility.url}` || '',
+          image: `${domain}/${imageUrl}`,
+          markerImage: `${domain}/${imageUrl}`,
           isSelected: isSelected
         },
         geometry: {
           type: 'Point',
-          coordinates: [facility.location.lng, facility.location.lat]
+          coordinates: [facility.location[0], facility.location[1]]
         }
       };
     }));
@@ -175,7 +173,7 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
           const optimizedUrl = await loadOptimizedImage(url, markerSize);
           if (optimizedUrl) {
             const img = new Image();
-            img.src = optimizedUrl;
+            img.src = `${optimizedUrl}`;
             await img.decode();
             targetMap.addImage(url, img);
           }
