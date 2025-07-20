@@ -686,6 +686,10 @@ function handleProfileClick() {
   .result-name {
     font-size: 0.8rem;
   }
+  .search-no-results {
+    left: 80%;
+    width: 360px;
+  }
   
 }
 </style>

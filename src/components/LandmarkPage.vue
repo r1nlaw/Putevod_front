@@ -137,8 +137,8 @@ onMounted(() => {
 }
 
 .image-placeholder {
-  width: 320px;
-  height: 320px;
+  max-width: 320px;
+  max-height: 320px;
   background-color: #e0e0e0;
   border-radius: 16px;
   flex-shrink: 0;

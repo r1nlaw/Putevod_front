@@ -88,7 +88,7 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
   try {
     if (selectedIds.length > 0) {
       // Загрузка достопримечательностей по ID
-      const response = await fetch(`${domain}/api/getLandmarks`, {
+      const response = await fetch(`${domain}/landmarks/facilities`, {
         method: 'POST',
         body: JSON.stringify(selectedIds),
         headers: { 'Content-Type': 'application/json' }
@@ -233,7 +233,7 @@ const showPopup = (feature, targetMap) => {
       btn.addEventListener('click', () => {
         const n = btn.getAttribute('data-name');
         if (n) {
-          router.push(`/landmark/${encodeURIComponent(n)}`);
+          router.push(`/landmarks/${encodeURIComponent(n)}`);
           popup.remove();
         }
       });
