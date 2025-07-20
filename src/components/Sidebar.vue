@@ -267,6 +267,11 @@ const handleClick = (label, index) => {
   width: 22px;
   text-align: center;
 }
+@media (max-width: 1919px) {
+  .sidebar-wrapper {
+    margin-right: 50px;
+  }
+}
 
 /* --- Adaptive styles --- */
 @media (max-width: 900px) {
