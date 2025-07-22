@@ -1,11 +1,16 @@
+
 <template>
   <div class="route-container">
     <div class="route-content">
       <div class="map-section">
-        <MapView :sidebar-open="sidebarOpen" />
-        <div id="map" class="map"></div>
+        <MapView 
+          :sidebar-open="sidebarOpen" 
+          :selected-places="selectedPlaces" 
+          @update:selectedPlaces="updateSelectedPlaces" 
+          @update:routeInfo="updateRouteInfo" 
+          @buildRoute="handleBuildRoute"
+        />
       </div>
-
       <div class="selected-places">
         <div class="places-split">
           <div class="places-list-container">
@@ -15,7 +20,7 @@
                   <img :src="place.image" :alt="place.name" class="place-image" />
                   <div class="place-details">
                     <span class="place-name">{{ place.name }}</span>
-                    <span class="place-distance">{{ place.distance }}</span>
+                    <span class="place-distance">{{ place.distance || 'Неизвестно' }}</span>
                   </div>
                 </div>
                 <button class="remove-button" @click="removePlace(index, place.id)">×</button>
@@ -30,9 +35,13 @@
                 <li v-for="(place, index) in selectedPlaces" :key="place.id" class="route-item">
                   <div class="dot"></div>
                   <div class="route-name">{{ place.name }}</div>
-                  <div class="route-distance">{{ place.distance }}</div>
+                  <div class="route-distance">{{ place.distance || 'Неизвестно' }}</div>
                 </li>
               </ul>
+              <div class="route-info">
+                <p>Общая дистанция: {{ totalDistance }} км</p>
+                <p>Примерное время: {{ totalDuration }} мин</p>
+              </div>
               <div class="button-action">
                 <button class="build-route-button" @click="buildRoute">Следовать</button>
                 <button class="build-route-button secondary" @click="clearRoute">Очистить маршрут</button>
@@ -46,47 +55,73 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
-import MapView from '@/components/MapView.vue'
+import { ref, onMounted, watch } from 'vue';
+import MapView from '@/components/MapView.vue';
 
-const selectedPlaces = ref([])
+const selectedPlaces = ref([]);
+const totalDistance = ref(0);
+const totalDuration = ref(0);
+const sidebarOpen = ref(true);
+const emit = defineEmits(['update:selectedPlaces', 'update:routeInfo', 'buildRoute']);
 
 onMounted(() => {
-  const savedPlaces = JSON.parse(localStorage.getItem('selectedPlaces') || '[]')
-  selectedPlaces.value = savedPlaces
-  updateRouteLine()
-})
+  const savedPlaces = JSON.parse(localStorage.getItem('selectedPlaces') || '[]');
+  selectedPlaces.value = savedPlaces;
+  updateRouteLine();
+});
 
 watch(selectedPlaces, () => {
-  updateRouteLine()
-})
+  updateRouteLine();
+  localStorage.setItem('selectedPlaces', JSON.stringify(selectedPlaces.value));
+}, { deep: true });
+
+const updateSelectedPlaces = (places) => {
+  selectedPlaces.value = places;
+  localStorage.setItem('selectedPlaces', JSON.stringify(places));
+};
+
+const updateRouteInfo = ({ totalDistance: distance, totalDuration: duration }) => {
+  totalDistance.value = distance;
+  totalDuration.value = duration;
+};
 
 const updateRouteLine = () => {
-  const routeLine = document.querySelector('.route-line')
-  const firstDot = document.querySelector('.route-item .dot')
-  const lastDot = document.querySelector('.route-item:last-of-type .dot')
+  const routeLine = document.querySelector('.route-line');
+  const firstDot = document.querySelector('.route-item .dot');
+  const lastDot = document.querySelector('.route-item:last-of-type .dot');
 
   if (firstDot && lastDot && routeLine) {
-    const firstDotTop = firstDot.offsetTop
-    const lastDotBottom = lastDot.offsetTop + lastDot.offsetHeight
-    routeLine.style.top = `${firstDotTop}px`
-    routeLine.style.height = `${lastDotBottom - firstDotTop}px`
+    const firstDotTop = firstDot.offsetTop;
+    const lastDotBottom = lastDot.offsetTop + lastDot.offsetHeight;
+    routeLine.style.top = `${firstDotTop}px`;
+    routeLine.style.height = `${lastDotBottom - firstDotTop}px`;
   }
-}
+};
 
-const removePlace = (index, id) => {
-  selectedPlaces.value.splice(index, 1)
-  localStorage.setItem('selectedPlaces', JSON.stringify(selectedPlaces.value))
-}
+const removePlace = async (index, id) => {
+  selectedPlaces.value.splice(index, 1);
+  localStorage.setItem('selectedPlaces', JSON.stringify(selectedPlaces.value));
+  emit('update:selectedPlaces', selectedPlaces.value);
+};
 
 const buildRoute = () => {
-  alert('Маршрут построен с ' + selectedPlaces.value.length + ' точками!')
-}
+  if (selectedPlaces.value.length > 0) {
+    emit('buildRoute', selectedPlaces.value);
+  } else {
+    alert('Добавьте хотя бы одну точку для построения маршрута!');
+  }
+};
+
+const handleBuildRoute = () => {
+  // Обработка в MapView.vue через defineExpose
+};
 
 const clearRoute = () => {
-  selectedPlaces.value = []
-  localStorage.setItem('selectedPlaces', JSON.stringify([]))
-}
+  selectedPlaces.value = [];
+  localStorage.setItem('selectedPlaces', JSON.stringify([]));
+  emit('update:selectedPlaces', []);
+  emit('update:routeInfo', { totalDistance: 0, totalDuration: 0 });
+};
 </script>
 
 <style scoped>
@@ -203,6 +238,12 @@ const clearRoute = () => {
   border-radius: 16px;
 }
 
+.route-info {
+  margin: 16px 0;
+  font-size: 14px;
+  color: #1d1d1d;
+}
+
 .button-action {
   display: flex;
   gap: 15px;
@@ -212,7 +253,7 @@ const clearRoute = () => {
   position: absolute;
   width: 2px;
   background-color: #2d4834;
-  left: 5px; /* Выравнивание по центру точек */
+  left: 5px;
 }
 
 .dot {
@@ -224,7 +265,7 @@ const clearRoute = () => {
   left: -19px;
   top: 50%;
   transform: translateY(-50%);
-  z-index: 1; /* Точки поверх линии */
+  z-index: 1;
 }
 
 .route-list {
@@ -260,10 +301,6 @@ p {
   font-family: "Montserrat", sans-serif;
 }
 
-.route-duration {
-  color: #1d1d1d;
-}
-
 .build-route-button {
   font-family: "Montserrat", sans-serif;
   background-color: #2d4834;
@@ -293,7 +330,6 @@ p {
   }
   .button-action {
     width: 100%;
-  
   }
   .build-route-button {
     width: 50%;
@@ -310,20 +346,16 @@ p {
   .place-image {
     width: 20vw;
   }
-
   .places-split {
     flex-direction: column;
   }
-
   .route-summary {
     padding-left: 0;
     border-left: none;
     margin-top: 16px;
   }
-
   .route-line {
     left: 5px;
   }
-
 }
 </style>
