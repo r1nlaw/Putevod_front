@@ -32,7 +32,6 @@ const emit = defineEmits(['update:selectedPlaces', 'update:routeInfo', 'buildRou
 
 const map_style = import.meta.env.VITE_MAP_STYLE_URL;
 const domain = import.meta.env.VITE_BACKEND_URL;
-const mapboxAccessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
 const isMapVisible = ref(true);
 const isMapExpanded = ref(false);
@@ -95,7 +94,7 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
     if (selectedIds.length > 0) {
       const response = await fetch(`${domain}/landmarks/facilities`, {
         method: 'POST',
-        body: JSON.stringify({ ids: selectedIds }), // Изменяем формат
+        body: JSON.stringify({ ids: selectedIds }),
         headers: { 'Content-Type': 'application/json' }
       });
       if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
@@ -283,11 +282,20 @@ const getUserLocation = () => {
       (error) => {
         console.error('Ошибка получения геопозиции:', error);
         userLocation.value = null;
+        let message = 'Не удалось определить ваше местоположение.';
+        if (error.code === error.PERMISSION_DENIED) {
+          message = 'Доступ к геолокации запрещён. Пожалуйста, разрешите доступ в настройках браузера.';
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          message = 'Местоположение недоступно. Проверьте подключение к интернету или настройки устройства.';
+        } else if (error.code === error.TIMEOUT) {
+          message = 'Превышено время ожидания для получения местоположения. Попробуйте снова.';
+        }
+        alert(message);
       },
       {
         enableHighAccuracy: true,
         maximumAge: 0,
-        timeout: 5000
+        timeout: 10000
       }
     );
   } else {
@@ -298,13 +306,13 @@ const getUserLocation = () => {
 
 const getLandmarksByIDs = async (ids) => {
   if (!ids.length) return [];
-  
+
   try {
     console.log('Sending IDs to API:', ids);
     const response = await fetch(`${domain}/landmarks`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify([3, 4, 2]),
+      body: JSON.stringify(ids)
     });
     if (!response.ok) {
       console.error('API response:', await response.text());
@@ -319,75 +327,102 @@ const getLandmarksByIDs = async (ids) => {
   }
 };
 
-const getRoute = async (points) => {
-  if (!points || points.length < 2 || !mapboxAccessToken) {
-    if (!mapboxAccessToken) console.error('Mapbox access token is missing');
-    alert('Невозможно построить маршрут: недостаточно точек или отсутствует токен Mapbox.');
-    return;
-  }
-
-  const coordinates = points.map(p => `${p.location.lng},${p.location.lat}`).join(';');
-  const url = `https://api.mapbox.com/directions/v5/mapbox/walking/${coordinates}?geometries=geojson&access_token=${mapboxAccessToken}`;
-
-  try {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
-    const data = await response.json();
-    if (data.routes && data.routes.length > 0) {
-      const route = data.routes[0];
-      const routeGeojson = {
-        type: 'Feature',
-        properties: {
-          distance: route.distance,
-          duration: route.duration
-        },
-        geometry: route.geometry
-      };
-
-      if (!map.getSource(routeSourceId)) {
-        map.addSource(routeSourceId, {
-          type: 'geojson',
-          data: routeGeojson
-        });
-        map.addLayer({
-          id: 'route',
-          type: 'line',
-          source: routeSourceId,
-          layout: {
-            'line-join': 'round',
-            'line-cap': 'round'
-          },
-          paint: {
-            'line-color': '#2d4834',
-            'line-width': 5,
-            'line-opacity': 0.75
-          }
-        });
-      } else {
-        map.getSource(routeSourceId).setData(routeGeojson);
+function getRoute(points) {
+  return new Promise((resolve, reject) => {
+    try {
+      if (!points || points.length < 2) {
+        alert('Невозможно построить маршрут: необходимо выбрать как минимум две точки.');
+        reject(new Error('Недостаточно точек для маршрута'));
+        return;
       }
 
-      const distances = route.legs.map(leg => (leg.distance / 1000).toFixed(2) + ' км');
-      const durations = route.legs.map(leg => Math.round(leg.duration / 60) + ' мин');
-      const updatedPlaces = props.selectedPlaces.map((place, index) => ({
-        ...place,
-        distance: distances[index] || '',
-        duration: durations[index] || ''
-      }));
-      emit('update:selectedPlaces', updatedPlaces);
-      emit('update:routeInfo', {
-        totalDistance: (route.distance / 1000).toFixed(2),
-        totalDuration: Math.round(route.duration / 60)
-      });
-    } else {
-      console.warn('No routes found');
-      alert('Маршрут не найден. Проверьте выбранные точки.');
+      // Формируем строку координат в формате lng,lat;lng,lat
+      const coordinates = points
+        .map(p => `${p.location.lng},${p.location.lat}`)
+        .join(';');
+
+      const url = `https://router.project-osrm.org/route/v1/walking/${coordinates}?overview=full&geometries=geojson`;
+
+      fetch(url)
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
+          return res.json();
+        })
+        .then(data => {
+          if (data.routes && data.routes[0]) {
+            const route = data.routes[0];
+            const routeGeojson = {
+              type: 'Feature',
+              properties: {
+                distance: route.distance,
+                duration: route.duration
+              },
+              geometry: route.geometry
+            };
+
+            if (!map.getSource(routeSourceId)) {
+              map.addSource(routeSourceId, {
+                type: 'geojson',
+                data: routeGeojson
+              });
+              map.addLayer({
+                id: 'route-line',
+                type: 'line',
+                source: routeSourceId,
+                layout: {
+                  'line-join': 'round',
+                  'line-cap': 'round'
+                },
+                paint: {
+                  'line-color': '#2d4834',
+                  'line-width': [
+                    'interpolate',
+                    ['linear'],
+                    ['zoom'],
+                    10, 3,
+                    15, 5,
+                    20, 8
+                  ],
+                  'line-opacity': 0.8
+                }
+              });
+            } else {
+              map.getSource(routeSourceId).setData(routeGeojson);
+            }
+
+            // Обновляем информацию о маршруте
+            const distances = route.legs.map(leg => (leg.distance / 1000).toFixed(2) + ' км');
+            const durations = route.legs.map(leg => Math.round(leg.duration / 60) + ' мин');
+            const updatedPlaces = props.selectedPlaces.map((place, index) => ({
+              ...place,
+              distance: distances[index] || '',
+              duration: durations[index] || ''
+            }));
+            emit('update:selectedPlaces', updatedPlaces);
+            emit('update:routeInfo', {
+              totalDistance: (route.distance / 1000).toFixed(2),
+              totalDuration: Math.round(route.duration / 60)
+            });
+
+            resolve();
+          } else {
+            console.warn('Маршрут не найден');
+            alert('Маршрут не найден. Проверьте выбранные точки.');
+            reject(new Error('Маршрут не найден'));
+          }
+        })
+        .catch(err => {
+          console.error('Ошибка при построении маршрута:', err);
+          alert('Ошибка при построении маршрута. Попробуйте позже.');
+          reject(err);
+        });
+    } catch (error) {
+      console.error('Ошибка в getRoute:', error);
+      alert('Ошибка при построении маршрута. Попробуйте позже.');
+      reject(error);
     }
-  } catch (error) {
-    console.error('Error fetching route:', error);
-    alert('Ошибка при построении маршрута. Попробуйте позже.');
-  }
-};
+  });
+}
 
 const updateRouteWithUserLocation = async () => {
   if (!userLocation.value || selectedRoutePoints.value.length === 0) {
@@ -530,6 +565,29 @@ onMounted(async () => {
         'text-field': '{point_count_abbreviated}',
         'text-font': ['Roboto Bold', 'Arial Unicode MS Bold'],
         'text-size': 14
+      }
+    });
+
+    map.addSource(routeSourceId, {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: [] }
+    });
+
+    map.addLayer({
+      id: 'route-line',
+      type: 'line',
+      source: routeSourceId,
+      paint: {
+        'line-color': '#2d4834',
+        'line-width': [
+          'interpolate',
+          ['linear'],
+          ['zoom'],
+          10, 3,
+          15, 5,
+          20, 8
+        ],
+        'line-opacity': 0.8
       }
     });
 
