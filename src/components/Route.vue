@@ -1,13 +1,12 @@
-
 <template>
   <div class="route-container">
     <div class="route-content">
       <div class="map-section">
         <MapView 
+          ref="mapView"
           :sidebar-open="sidebarOpen" 
           :selected-places="selectedPlaces" 
-          @update:selectedPlaces="updateSelectedPlaces" 
-          @update:routeInfo="updateRouteInfo" 
+          @update:selectedPlaces="updateSelectedPlaces"
           @buildRoute="handleBuildRoute"
         />
       </div>
@@ -20,7 +19,7 @@
                   <img :src="place.image" :alt="place.name" class="place-image" />
                   <div class="place-details">
                     <span class="place-name">{{ place.name }}</span>
-                    <span class="place-distance">{{ place.distance || 'Неизвестно' }}</span>
+                    <span class="place-address">{{ place.address || 'Адрес неизвестен' }}</span>
                   </div>
                 </div>
                 <button class="remove-button" @click="removePlace(index, place.id)">×</button>
@@ -35,13 +34,9 @@
                 <li v-for="(place, index) in selectedPlaces" :key="place.id" class="route-item">
                   <div class="dot"></div>
                   <div class="route-name">{{ place.name }}</div>
-                  <div class="route-distance">{{ place.distance || 'Неизвестно' }}</div>
+                  <div class="route-address">{{ place.address || 'Адрес неизвестен' }}</div>
                 </li>
               </ul>
-              <div class="route-info">
-                <p>Общая дистанция: {{ totalDistance }} км</p>
-                <p>Примерное время: {{ totalDuration }} мин</p>
-              </div>
               <div class="button-action">
                 <button class="build-route-button" @click="buildRoute">Следовать</button>
                 <button class="build-route-button secondary" @click="clearRoute">Очистить маршрут</button>
@@ -59,14 +54,19 @@ import { ref, onMounted, watch } from 'vue';
 import MapView from '@/components/MapView.vue';
 
 const selectedPlaces = ref([]);
-const totalDistance = ref(0);
-const totalDuration = ref(0);
 const sidebarOpen = ref(true);
-const emit = defineEmits(['update:selectedPlaces', 'update:routeInfo', 'buildRoute']);
+const mapView = ref(null);
+const emit = defineEmits(['update:selectedPlaces', 'buildRoute']);
 
 onMounted(() => {
   const savedPlaces = JSON.parse(localStorage.getItem('selectedPlaces') || '[]');
-  selectedPlaces.value = savedPlaces;
+  selectedPlaces.value = savedPlaces.map(place => ({
+    id: place.id,
+    name: place.name,
+    image: place.image,
+    address: place.address,
+    url: place.url
+  }));
   updateRouteLine();
 });
 
@@ -76,13 +76,14 @@ watch(selectedPlaces, () => {
 }, { deep: true });
 
 const updateSelectedPlaces = (places) => {
-  selectedPlaces.value = places;
-  localStorage.setItem('selectedPlaces', JSON.stringify(places));
-};
-
-const updateRouteInfo = ({ totalDistance: distance, totalDuration: duration }) => {
-  totalDistance.value = distance;
-  totalDuration.value = duration;
+  selectedPlaces.value = places.map(place => ({
+    id: place.id,
+    name: place.name,
+    image: place.image,
+    address: place.address,
+    url: place.url
+  }));
+  localStorage.setItem('selectedPlaces', JSON.stringify(selectedPlaces.value));
 };
 
 const updateRouteLine = () => {
@@ -106,21 +107,23 @@ const removePlace = async (index, id) => {
 
 const buildRoute = () => {
   if (selectedPlaces.value.length > 0) {
+    if (mapView.value && typeof mapView.value.handleBuildRoute === 'function') {
+      mapView.value.handleBuildRoute(selectedPlaces.value);
+    } else {
+      console.error('MapView ref or handleBuildRoute not available');
+    }
     emit('buildRoute', selectedPlaces.value);
   } else {
+    console.warn('No places selected for route');
     alert('Добавьте хотя бы одну точку для построения маршрута!');
   }
 };
 
-const handleBuildRoute = () => {
-  // Обработка в MapView.vue через defineExpose
-};
 
 const clearRoute = () => {
   selectedPlaces.value = [];
   localStorage.setItem('selectedPlaces', JSON.stringify([]));
   emit('update:selectedPlaces', []);
-  emit('update:routeInfo', { totalDistance: 0, totalDuration: 0 });
 };
 </script>
 
@@ -172,12 +175,6 @@ const clearRoute = () => {
   margin-bottom: 16px;
 }
 
-.places-list {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 16px 0;
-}
-
 .place-item {
   display: flex;
   justify-content: space-between;
@@ -216,7 +213,7 @@ const clearRoute = () => {
   font-weight: 600;
 }
 
-.place-distance {
+.place-address {
   font-size: 12px;
   color: #1d1d1d;
 }
@@ -236,12 +233,6 @@ const clearRoute = () => {
   position: relative;
   background-color: #f5f3f3;
   border-radius: 16px;
-}
-
-.route-info {
-  margin: 16px 0;
-  font-size: 14px;
-  color: #1d1d1d;
 }
 
 .button-action {
@@ -290,7 +281,7 @@ const clearRoute = () => {
   color: #1d1d1d;
 }
 
-.route-distance {
+.route-address {
   font-size: 12px;
   color: #1d1d1d;
 }
@@ -340,7 +331,7 @@ p {
   .place-name {
     font-size: 0.8rem;
   }
-  .place-distance {
+  .place-address {
     font-size: 0.6rem;
   }
   .place-image {

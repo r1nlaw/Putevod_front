@@ -28,7 +28,7 @@ const props = defineProps({
   sidebarOpen: Boolean,
   selectedPlaces: Array
 });
-const emit = defineEmits(['update:selectedPlaces', 'update:routeInfo', 'buildRoute']);
+const emit = defineEmits(['update:selectedPlaces']);
 
 const map_style = import.meta.env.VITE_MAP_STYLE_URL;
 const domain = import.meta.env.VITE_BACKEND_URL;
@@ -46,6 +46,7 @@ const selectedRoutePoints = ref([]);
 const userLocation = ref(null);
 const userMarker = ref(null);
 const watchId = ref(null);
+const cachedLandmarks = ref(new Map());
 
 const router = useRouter();
 
@@ -56,6 +57,7 @@ function toggleMap() {
 }
 
 const loadOptimizedImage = async (url, targetWidth) => {
+  console.log('loadOptimizedImage called for url:', url);
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = 'Anonymous';
@@ -77,7 +79,10 @@ const loadOptimizedImage = async (url, targetWidth) => {
         resolve(URL.createObjectURL(blob));
       }, 'image/webp', 0.7);
     };
-    img.onerror = () => resolve(null);
+    img.onerror = () => {
+      console.warn('Error loading image:', url);
+      resolve(null);
+    };
     img.src = url;
   });
 };
@@ -92,6 +97,7 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
   let facilities = [];
   try {
     if (selectedIds.length > 0) {
+      console.log('Loading facilities for IDs:', selectedIds);
       const response = await fetch(`${domain}/landmarks/facilities`, {
         method: 'POST',
         body: JSON.stringify({ ids: selectedIds }),
@@ -99,8 +105,10 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
       });
       if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
       facilities = (await response.json()).data;
+      console.log('Facilities loaded:', facilities);
     } else {
       const bounds = targetMap.getBounds().toArray();
+      console.log('Loading facilities for bounds:', bounds);
       const response = await fetch(`${domain}/landmarks/facilities`, {
         method: 'POST',
         body: JSON.stringify({
@@ -111,8 +119,12 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
       });
       if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
       facilities = (await response.json()).data;
+      console.log('Facilities loaded for bounds:', facilities);
     }
-    if (!facilities?.length) return;
+    if (!facilities?.length) {
+      console.warn('No facilities found');
+      return;
+    }
 
     const newFeatures = await Promise.all(facilities.map(async facility => {
       const isSelected = selectedIds.includes(facility.id);
@@ -135,14 +147,20 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
         }
       };
     }));
+    console.log('New features for markers:', newFeatures);
 
     const source = targetMap.getSource('markers');
-    if (!source) return;
+    if (!source) {
+      console.error('Markers source not found');
+      return;
+    }
 
     source.setData({ type: 'FeatureCollection', features: newFeatures });
+    console.log('Markers source updated');
 
     if (targetMap.getLayer('unclustered-point')) {
       targetMap.removeLayer('unclustered-point');
+      console.log('Removed unclustered-point layer');
     }
 
     targetMap.addLayer({
@@ -163,10 +181,12 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
         'icon-opacity': 1
       }
     });
+    console.log('Added unclustered-point layer');
 
     const uniqueImages = [...new Set(newFeatures
       .filter(f => f.properties.markerImage)
       .map(f => f.properties.markerImage))];
+    console.log('Unique images to load:', uniqueImages);
 
     await Promise.all(uniqueImages.map(async url => {
       try {
@@ -177,6 +197,7 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
             img.src = optimizedUrl;
             await img.decode();
             targetMap.addImage(url, img);
+            console.log('Image loaded and added to map:', url);
           }
         }
       } catch (e) {
@@ -189,6 +210,7 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
 };
 
 const showPopup = (feature, targetMap) => {
+  console.log('showPopup called with feature:', feature);
   const { geometry, properties } = feature;
   const { name, url, image, address } = properties;
 
@@ -230,6 +252,7 @@ const showPopup = (feature, targetMap) => {
         if (n) {
           const baseDomain = import.meta.env.VITE_BACKEND_URL;
           const relativePath = n.startsWith(baseDomain) ? n.replace(baseDomain, '').replace(/^\//, '') : n;
+          console.log('Navigating to landmark:', relativePath);
           router.push(`/landmarks/${encodeURIComponent(relativePath)}`);
           popup.remove();
         }
@@ -239,33 +262,58 @@ const showPopup = (feature, targetMap) => {
     if (addBtn) {
       addBtn.addEventListener('click', async () => {
         const id = parseInt(addBtn.getAttribute('data-id'));
-        if (isNaN(id)) return;
+        if (isNaN(id)) {
+          console.error('Invalid ID in popup:', addBtn.getAttribute('data-id'));
+          return;
+        }
 
         const index = selectedRoutePoints.value.indexOf(id);
+        let updatedPlaces;
         if (index === -1) {
           selectedRoutePoints.value.push(id);
           addBtn.textContent = 'Убрать';
           addBtn.classList.add('remove');
+          console.log('Added place ID to selectedRoutePoints:', id);
+          const landmarks = await getLandmarksByIDs([id]);
+          if (landmarks.length > 0) {
+            const newPlace = {
+              id: landmarks[0].id,
+              name: landmarks[0].name,
+              image: `${domain}/${landmarks[0].images?.[0]?.thumbnail_path || defaultThumbnailPath}`,
+              address: landmarks[0].address,
+              url: landmarks[0].url
+            };
+            updatedPlaces = [...props.selectedPlaces, newPlace];
+          } else {
+            console.warn('Failed to fetch landmark data for ID:', id);
+            return;
+          }
         } else {
           selectedRoutePoints.value.splice(index, 1);
           addBtn.textContent = 'Добавить';
           addBtn.classList.remove('remove');
+          console.log('Removed place ID from selectedRoutePoints:', id);
+          updatedPlaces = props.selectedPlaces.filter(place => place.id !== id);
         }
-        await updateRouteWithUserLocation();
+        emit('update:selectedPlaces', updatedPlaces);
+        console.log('Emitted update:selectedPlaces with:', updatedPlaces);
       });
     }
   }, 0);
 };
 
 const getUserLocation = () => {
+  console.log('getUserLocation called');
   if ('geolocation' in navigator) {
     watchId.value = navigator.geolocation.watchPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
         userLocation.value = [longitude, latitude];
+        console.log('User location updated:', userLocation.value);
 
         if (userMarker.value) {
           userMarker.value.setLngLat(userLocation.value);
+          console.log('User marker updated at:', userLocation.value);
         } else {
           userMarker.value = new maplibregl.Marker({
             color: '#FF0000',
@@ -273,10 +321,7 @@ const getUserLocation = () => {
           })
             .setLngLat(userLocation.value)
             .addTo(map);
-        }
-
-        if (selectedRoutePoints.value.length > 0) {
-          updateRouteWithUserLocation();
+          console.log('User marker created at:', userLocation.value);
         }
       },
       (error) => {
@@ -305,7 +350,16 @@ const getUserLocation = () => {
 };
 
 const getLandmarksByIDs = async (ids) => {
-  if (!ids.length) return [];
+  if (!ids.length) {
+    console.warn('getLandmarksByIDs: No IDs provided');
+    return [];
+  }
+
+  const cacheKey = JSON.stringify(ids.sort());
+  if (cachedLandmarks.value.has(cacheKey)) {
+    console.log('Returning cached landmarks for IDs:', ids);
+    return cachedLandmarks.value.get(cacheKey);
+  }
 
   try {
     console.log('Sending IDs to API:', ids);
@@ -315,12 +369,15 @@ const getLandmarksByIDs = async (ids) => {
       body: JSON.stringify(ids)
     });
     if (!response.ok) {
-      console.error('API response:', await response.text());
+      console.error('API response error:', await response.text());
       throw new Error(`HTTP error: ${response.status}`);
     }
     const data = await response.json();
     console.log('API response data:', data);
-    return data.data || [];
+    const landmarks = data.data || [];
+    cachedLandmarks.value.set(cacheKey, landmarks);
+    console.log('Cached landmarks for key:', cacheKey);
+    return landmarks;
   } catch (error) {
     console.error('Error fetching landmarks:', error);
     return [];
@@ -330,33 +387,45 @@ const getLandmarksByIDs = async (ids) => {
 function getRoute(points) {
   return new Promise((resolve, reject) => {
     try {
+      console.log('getRoute called with points:', points);
       if (!points || points.length < 2) {
+        console.warn('getRoute: Insufficient points for route, need at least 2, got:', points?.length || 0);
         alert('Невозможно построить маршрут: необходимо выбрать как минимум две точки.');
         reject(new Error('Недостаточно точек для маршрута'));
         return;
       }
 
-      // Формируем строку координат в формате lng,lat;lng,lat
       const coordinates = points
-        .map(p => `${p.location.lng},${p.location.lat}`)
+        .map(p => {
+          console.log('Processing point:', p);
+          if (!p.location || typeof p.location.lng !== 'number' || typeof p.location.lat !== 'number') {
+            console.error('Invalid point format:', p);
+            throw new Error('Invalid point format');
+          }
+          return `${p.location.lng},${p.location.lat}`;
+        })
         .join(';');
+      console.log('Generated coordinates string:', coordinates);
 
       const url = `https://router.project-osrm.org/route/v1/walking/${coordinates}?overview=full&geometries=geojson`;
+      console.log('OSRM API URL:', url);
 
       fetch(url)
         .then(res => {
-          if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
+          console.log('OSRM API response status:', res.status);
+          if (!res.ok) {
+            console.error('OSRM API error, status:', res.status, 'statusText:', res.statusText);
+            throw new Error(`HTTP error: ${res.status}`);
+          }
           return res.json();
         })
         .then(data => {
           if (data.routes && data.routes[0]) {
             const route = data.routes[0];
+
             const routeGeojson = {
               type: 'Feature',
-              properties: {
-                distance: route.distance,
-                duration: route.duration
-              },
+              properties: {},
               geometry: route.geometry
             };
 
@@ -390,23 +459,9 @@ function getRoute(points) {
               map.getSource(routeSourceId).setData(routeGeojson);
             }
 
-            // Обновляем информацию о маршруте
-            const distances = route.legs.map(leg => (leg.distance / 1000).toFixed(2) + ' км');
-            const durations = route.legs.map(leg => Math.round(leg.duration / 60) + ' мин');
-            const updatedPlaces = props.selectedPlaces.map((place, index) => ({
-              ...place,
-              distance: distances[index] || '',
-              duration: durations[index] || ''
-            }));
-            emit('update:selectedPlaces', updatedPlaces);
-            emit('update:routeInfo', {
-              totalDistance: (route.distance / 1000).toFixed(2),
-              totalDuration: Math.round(route.duration / 60)
-            });
-
             resolve();
           } else {
-            console.warn('Маршрут не найден');
+            console.warn('Маршрут не найден, API response:', data);
             alert('Маршрут не найден. Проверьте выбранные точки.');
             reject(new Error('Маршрут не найден'));
           }
@@ -423,36 +478,6 @@ function getRoute(points) {
     }
   });
 }
-
-const updateRouteWithUserLocation = async () => {
-  if (!userLocation.value || selectedRoutePoints.value.length === 0) {
-    console.warn('No user location or no selected points');
-    return;
-  }
-
-  try {
-    const landmarks = await getLandmarksByIDs(selectedRoutePoints.value);
-    if (!landmarks?.length) {
-      console.warn('No landmarks found for selected IDs');
-      alert('Не удалось загрузить данные о достопримечательностях. Проверьте выбранные точки.');
-      return;
-    }
-
-    const routePoints = [
-      { location: { lng: userLocation.value[0], lat: userLocation.value[1] } },
-      ...landmarks.map(landmark => ({
-        location: { lng: landmark.location[0], lat: landmark.location[1] }
-      }))
-    ];
-
-    isRouting.value = true;
-    await getRoute(routePoints);
-    isRouting.value = false;
-  } catch (error) {
-    console.error('Error updating route:', error);
-    alert('Ошибка при обновлении маршрута. Попробуйте позже.');
-  }
-};
 
 const handleBuildRoute = async (places) => {
   if (!places || places.length === 0) {
@@ -625,10 +650,6 @@ onMounted(async () => {
   });
 
   getUserLocation();
-
-  window.addEventListener('resize', () => {
-    isMobile.value = window.innerWidth <= 768;
-  });
 });
 
 onBeforeUnmount(() => {
@@ -642,9 +663,9 @@ onBeforeUnmount(() => {
 
 watch(() => props.selectedPlaces, async (newPlaces) => {
   selectedRoutePoints.value = newPlaces.map(place => place.id);
-  await updateRouteWithUserLocation();
 }, { deep: true });
 
+// Экспортируем handleBuildRoute для использования в родительском компоненте
 defineExpose({ handleBuildRoute });
 </script>
 
