@@ -51,8 +51,10 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import MapView from '@/components/MapView.vue';
 
+const router = useRouter();
 const selectedPlaces = ref([]);
 const sidebarOpen = ref(true);
 const mapView = ref(null);
@@ -119,11 +121,11 @@ const buildRoute = () => {
   }
 };
 
-
 const clearRoute = () => {
   selectedPlaces.value = [];
   localStorage.setItem('selectedPlaces', JSON.stringify([]));
   emit('update:selectedPlaces', []);
+  router.push('/');
 };
 </script>
 
@@ -291,6 +293,7 @@ const clearRoute = () => {
   font-size: 12px;
   color: #1d1d1d;
 }
+
 .places-list {
   padding: 0;
 }
@@ -342,6 +345,4 @@ p {
     padding: 10px 10px;
   }
 }
-
-
 </style>

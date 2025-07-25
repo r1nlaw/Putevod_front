@@ -857,6 +857,13 @@ defineExpose({ handleBuildRoute });
   color: #e57373;
 }
 
+@media (max-width: 1920px) {
+  .map-container.with-sidebar {
+    margin-left: 50px;
+    width: calc(100% - 80px);
+  }
+}
+
 :deep(.landmark-action:hover) {
   background: #e6f2ed;
   color: #125341;

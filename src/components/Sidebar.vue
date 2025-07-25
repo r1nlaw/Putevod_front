@@ -124,10 +124,10 @@ const handleClick = (label, index) => {
   }
   if (label === 'Маршруты') {
     const selectedPlaces = JSON.parse(localStorage.getItem('selectedPlaces') || '[]');
-    if (selectedPlaces.length >= 2) {
+    if (selectedPlaces.length >= 1) {
       router.push('/routeList');
     } else {
-      alert('Выберите хотя бы 2 достопримечательности');
+      alert('Выберите хотя бы 1 достопримечательности');
     }
   }
 
