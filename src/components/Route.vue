@@ -1,5 +1,5 @@
 <template>
-  <div class="route-container">
+  <div class="route-container" :class="{'with-sidebar': sidebarOpen}">
     <div class="route-content">
       <div class="map-section">
         <MapView 
@@ -10,7 +10,7 @@
           @buildRoute="handleBuildRoute"
         />
       </div>
-      <div class="selected-places">
+      <div class="selected-places" :class="{'with-sidebar': sidebarOpen}">
         <div class="places-split">
           <div class="places-list-container">
             <ul class="places-list">
@@ -143,7 +143,8 @@ const clearRoute = () => {
 }
 
 .selected-places {
-  width: 94%;
+  max-width: 1750px;
+  width: 100%;
   background: #fff;
   padding: 16px;
   margin: 0 auto;
@@ -151,6 +152,11 @@ const clearRoute = () => {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
   overflow-y: auto;
   position: relative;
+}
+
+.selected-places.with-sidebar {
+  margin-left: 50px;
+  width: calc(100% - 80px);
 }
 
 .places-split {
@@ -285,6 +291,9 @@ const clearRoute = () => {
   font-size: 12px;
   color: #1d1d1d;
 }
+.places-list {
+  padding: 0;
+}
 
 p {
   color: #1d1d1d;
@@ -312,41 +321,27 @@ p {
 }
 
 @media (max-width: 900px) {
-  .map-section {
-    height: 50vh;
-  }
-  .selected-places {
+  .selected-places.with-sidebar {
+    margin-left: 0px;
     width: 100%;
-    height: 50vh;
-  }
-  .button-action {
-    width: 100%;
-  }
-  .build-route-button {
-    width: 50%;
-  }
-  .route-details {
-    padding: 6px;
-  }
-  .place-name {
-    font-size: 0.8rem;
-  }
-  .place-address {
-    font-size: 0.6rem;
-  }
-  .place-image {
-    width: 20vw;
   }
   .places-split {
     flex-direction: column;
+  }
+  .place-image {
+    width: 80px;
+    height: 70px;
   }
   .route-summary {
     padding-left: 0;
     border-left: none;
     margin-top: 16px;
   }
-  .route-line {
-    left: 5px;
+  .build-route-button {
+    width: 50%;
+    padding: 10px 10px;
   }
 }
+
+
 </style>

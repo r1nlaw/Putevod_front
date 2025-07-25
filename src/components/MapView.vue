@@ -57,7 +57,6 @@ function toggleMap() {
 }
 
 const loadOptimizedImage = async (url, targetWidth) => {
-  console.log('loadOptimizedImage called for url:', url);
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = 'Anonymous';
@@ -97,7 +96,6 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
   let facilities = [];
   try {
     if (selectedIds.length > 0) {
-      console.log('Loading facilities for IDs:', selectedIds);
       const response = await fetch(`${domain}/landmarks/facilities`, {
         method: 'POST',
         body: JSON.stringify({ ids: selectedIds }),
@@ -105,10 +103,8 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
       });
       if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
       facilities = (await response.json()).data;
-      console.log('Facilities loaded:', facilities);
     } else {
       const bounds = targetMap.getBounds().toArray();
-      console.log('Loading facilities for bounds:', bounds);
       const response = await fetch(`${domain}/landmarks/facilities`, {
         method: 'POST',
         body: JSON.stringify({
@@ -119,7 +115,6 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
       });
       if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
       facilities = (await response.json()).data;
-      console.log('Facilities loaded for bounds:', facilities);
     }
     if (!facilities?.length) {
       console.warn('No facilities found');
@@ -147,7 +142,6 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
         }
       };
     }));
-    console.log('New features for markers:', newFeatures);
 
     const source = targetMap.getSource('markers');
     if (!source) {
@@ -156,11 +150,9 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
     }
 
     source.setData({ type: 'FeatureCollection', features: newFeatures });
-    console.log('Markers source updated');
 
     if (targetMap.getLayer('unclustered-point')) {
       targetMap.removeLayer('unclustered-point');
-      console.log('Removed unclustered-point layer');
     }
 
     targetMap.addLayer({
@@ -172,7 +164,7 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
         : ['!', ['has', 'point_count']],
       layout: {
         'icon-image': ['coalesce', ['get', 'markerImage'], 'default-marker'],
-        'icon-size': isMobile.value ? 0.6 : 0.6,
+        'icon-size': isMobile.value ? 0.5 : 0.6,
         'icon-allow-overlap': true,
         'icon-anchor': 'bottom',
         'icon-padding': 10
@@ -181,12 +173,10 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
         'icon-opacity': 1
       }
     });
-    console.log('Added unclustered-point layer');
 
     const uniqueImages = [...new Set(newFeatures
       .filter(f => f.properties.markerImage)
       .map(f => f.properties.markerImage))];
-    console.log('Unique images to load:', uniqueImages);
 
     await Promise.all(uniqueImages.map(async url => {
       try {
@@ -197,7 +187,6 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
             img.src = optimizedUrl;
             await img.decode();
             targetMap.addImage(url, img);
-            console.log('Image loaded and added to map:', url);
           }
         }
       } catch (e) {
@@ -210,7 +199,6 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
 };
 
 const showPopup = (feature, targetMap) => {
-  console.log('showPopup called with feature:', feature);
   const { geometry, properties } = feature;
   const { name, url, image, address } = properties;
 
@@ -252,7 +240,6 @@ const showPopup = (feature, targetMap) => {
         if (n) {
           const baseDomain = import.meta.env.VITE_BACKEND_URL;
           const relativePath = n.startsWith(baseDomain) ? n.replace(baseDomain, '').replace(/^\//, '') : n;
-          console.log('Navigating to landmark:', relativePath);
           router.push(`/landmarks/${encodeURIComponent(relativePath)}`);
           popup.remove();
         }
@@ -273,7 +260,6 @@ const showPopup = (feature, targetMap) => {
           selectedRoutePoints.value.push(id);
           addBtn.textContent = 'Убрать';
           addBtn.classList.add('remove');
-          console.log('Added place ID to selectedRoutePoints:', id);
           const landmarks = await getLandmarksByIDs([id]);
           if (landmarks.length > 0) {
             const newPlace = {
@@ -292,28 +278,23 @@ const showPopup = (feature, targetMap) => {
           selectedRoutePoints.value.splice(index, 1);
           addBtn.textContent = 'Добавить';
           addBtn.classList.remove('remove');
-          console.log('Removed place ID from selectedRoutePoints:', id);
           updatedPlaces = props.selectedPlaces.filter(place => place.id !== id);
         }
         emit('update:selectedPlaces', updatedPlaces);
-        console.log('Emitted update:selectedPlaces with:', updatedPlaces);
       });
     }
   }, 0);
 };
 
 const getUserLocation = () => {
-  console.log('getUserLocation called');
   if ('geolocation' in navigator) {
     watchId.value = navigator.geolocation.watchPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
         userLocation.value = [longitude, latitude];
-        console.log('User location updated:', userLocation.value);
 
         if (userMarker.value) {
           userMarker.value.setLngLat(userLocation.value);
-          console.log('User marker updated at:', userLocation.value);
         } else {
           userMarker.value = new maplibregl.Marker({
             color: '#FF0000',
@@ -321,7 +302,7 @@ const getUserLocation = () => {
           })
             .setLngLat(userLocation.value)
             .addTo(map);
-          console.log('User marker created at:', userLocation.value);
+        
         }
       },
       (error) => {
@@ -357,12 +338,10 @@ const getLandmarksByIDs = async (ids) => {
 
   const cacheKey = JSON.stringify(ids.sort());
   if (cachedLandmarks.value.has(cacheKey)) {
-    console.log('Returning cached landmarks for IDs:', ids);
     return cachedLandmarks.value.get(cacheKey);
   }
 
   try {
-    console.log('Sending IDs to API:', ids);
     const response = await fetch(`${domain}/landmarks`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -373,10 +352,8 @@ const getLandmarksByIDs = async (ids) => {
       throw new Error(`HTTP error: ${response.status}`);
     }
     const data = await response.json();
-    console.log('API response data:', data);
     const landmarks = data.data || [];
     cachedLandmarks.value.set(cacheKey, landmarks);
-    console.log('Cached landmarks for key:', cacheKey);
     return landmarks;
   } catch (error) {
     console.error('Error fetching landmarks:', error);
@@ -387,7 +364,6 @@ const getLandmarksByIDs = async (ids) => {
 function getRoute(points) {
   return new Promise((resolve, reject) => {
     try {
-      console.log('getRoute called with points:', points);
       if (!points || points.length < 2) {
         console.warn('getRoute: Insufficient points for route, need at least 2, got:', points?.length || 0);
         alert('Невозможно построить маршрут: необходимо выбрать как минимум две точки.');
@@ -397,7 +373,6 @@ function getRoute(points) {
 
       const coordinates = points
         .map(p => {
-          console.log('Processing point:', p);
           if (!p.location || typeof p.location.lng !== 'number' || typeof p.location.lat !== 'number') {
             console.error('Invalid point format:', p);
             throw new Error('Invalid point format');
@@ -405,14 +380,10 @@ function getRoute(points) {
           return `${p.location.lng},${p.location.lat}`;
         })
         .join(';');
-      console.log('Generated coordinates string:', coordinates);
-
       const url = `https://router.project-osrm.org/route/v1/walking/${coordinates}?overview=full&geometries=geojson`;
-      console.log('OSRM API URL:', url);
 
       fetch(url)
         .then(res => {
-          console.log('OSRM API response status:', res.status);
           if (!res.ok) {
             console.error('OSRM API error, status:', res.status, 'statusText:', res.statusText);
             throw new Error(`HTTP error: ${res.status}`);
@@ -741,7 +712,7 @@ defineExpose({ handleBuildRoute });
 
 /* Popup styles */
 :deep(.popup-card) {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Montserrat", sans-serif;
   background: #fff;
   border-radius: 25px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.2);
@@ -770,6 +741,7 @@ defineExpose({ handleBuildRoute });
   font-size: 12px;
   border-radius: 10px;
 }
+
 
 :deep(.popup-card-body) {
   padding: 16px;
@@ -897,6 +869,69 @@ defineExpose({ handleBuildRoute });
   .map-container.with-sidebar {
     margin-left: 0;
     width: calc(100%);
+  }
+  :deep(.popup-card) {
+    width: 260px; 
+    max-width: 95vw; 
+    height: 300px; 
+    border-radius: 20px; 
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15); 
+  }
+
+
+  :deep(.popup-card-image) {
+    height: 120px; 
+    padding: 8px; 
+    border-radius: 20px; 
+  }
+
+  :deep(.popup-card-body) {
+    padding: 12px; 
+    height: auto; 
+  }
+  :deep(.popup-card-link) {
+    font-weight: 100 !important; 
+    height: 30px;
+    width: 25vw;
+    padding: 0 10px;
+    margin-left: 2vw;
+    font-size: 12px;
+    border-radius: 10px;
+  }
+  :deep(.popup-add-btn) {
+    width: 27vw;
+    color: #fff !important;
+    background: #3d5a40 !important;
+  }
+
+  :deep(.popup-card-title) {
+    font-size: 1rem; 
+    margin-bottom: 6px; 
+  }
+
+  :deep(.popup-card-address) {
+    font-size: 0.8rem; 
+    margin-bottom: 4px;
+  }
+
+  :deep(.popup-card-link),
+  :deep(.popup-add-btn) {
+    padding: 6px 12px;
+    font-size: 0.9rem; 
+    border-radius: 15px;
+  }
+
+  :deep(.action-icon-img) {
+    width: 16px; 
+    height: 16px;
+  }
+
+  :deep(.maplibregl-popup-close-button) {
+    top: 10px; 
+    right: -30px; 
+    width: 24px; 
+    height: 24px;
+    font-size: 16px; 
   }
 }
 @media (max-width: 600px) {

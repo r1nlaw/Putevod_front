@@ -112,7 +112,7 @@ onMounted(() => {
     color: #333;
   }
   .accordion-button.collapsed:hover {
-    background: #003d1817;
+    background: #79797917;
   }
   .accordion-button:not(.collapsed) {
     background: #ffffff7a;

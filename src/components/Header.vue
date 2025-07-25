@@ -62,12 +62,12 @@
         </div>
       </div>
       <div class="header__actions">
-        <router-link to="/routeList" class="header__counter-router">
+        <div class="header__counter-router" @click="handleRouteListClick">
           <div class="header__counter">
             <div class="header__circle">{{ selectedCount }}</div>
             <img :src="directionsIcon" alt="Маршруты" class="header__arrow" />
           </div>
-        </router-link>
+        </div>
         <div class="header__message">
           <button class="header__button">
             <img :src="messageIcon" alt="Сообщения" />
@@ -127,6 +127,17 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside);
   debouncedSearch.cancel(); // Отменяем дебонсинг при размонтировании
 });
+
+
+const handleRouteListClick = () => {
+  const selectedPlaces = JSON.parse(localStorage.getItem('selectedPlaces') || '[]');
+  console.log('handleRouteListClick: selectedPlaces length:', selectedPlaces.length);
+  if (selectedPlaces.length >= 2) {
+    router.push('/routeList');
+  } else {
+    alert('Выберите хотя бы 2 достопримечательности');
+  }
+};
 
 async function handleSearch() {
   if (!searchQuery.value.trim()) {

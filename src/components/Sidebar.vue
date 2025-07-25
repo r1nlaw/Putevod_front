@@ -123,7 +123,12 @@ const handleClick = (label, index) => {
     router.push('/')
   }
   if (label === 'Маршруты') {
-    router.push('/routeList')
+    const selectedPlaces = JSON.parse(localStorage.getItem('selectedPlaces') || '[]');
+    if (selectedPlaces.length >= 2) {
+      router.push('/routeList');
+    } else {
+      alert('Выберите хотя бы 2 достопримечательности');
+    }
   }
 
   emit('update:modelValue', false)
