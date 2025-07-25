@@ -46,7 +46,7 @@ import arrow from '@/assets/icons/arrow.png';
 import Archaeology from '../assets/emoji/archaeology.png'
 const props = defineProps({ sidebarOpen: Boolean });
 
-const opened = ref(-1);
+const opened = ref(0);
 const bodies = ref([]);
 const heights = ref([]);
 
