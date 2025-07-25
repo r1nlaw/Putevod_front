@@ -53,13 +53,17 @@ async function loadLandmark(categories = selectedCategories.value) {
 
     const landmarks = await response.json();
 
-    if (!landmarks || landmarks.length === 0) {
+    if (Array.isArray(landmarks) && landmarks.length === 0) {
+      noMoreData.value = true; 
+      return;
+    }
+
+    if (!landmarks || landmarks.data.length === 0) {
       noMoreData.value = true;
       return;
     }
 
     const newPlaces = landmarks.data.map(element => ({
-
       id: element.id,
       title: element.name,
       address: element.address,
@@ -148,22 +152,21 @@ watch(
   }
 );
 </script>
-
 <style scoped>
 .landmarks-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 0.2fr));
   gap: 5px 5px;
   margin: 0 auto;
   padding: 35px 0.5%;
   background: #fff;
   max-width: 1750px;
+  justify-content: flex-start; 
 }
 .landmarks-grid-inner {
   display: contents;
 }
 
-/* Анимация появления карточек */
 .fade-enter-active, .fade-leave-active {
   transition: all 0.6s ease;
 }
