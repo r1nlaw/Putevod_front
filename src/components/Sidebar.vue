@@ -276,6 +276,12 @@ const handleClick = (label, index) => {
   .sidebar-wrapper {
     margin-right: 50px;
   }
+  .sidebar-wrapper.collapsed {
+    min-width: 60px;
+  }
+  .sidebar-wrapper.open {
+    min-width: 300px;
+  }
 }
 
 /* --- Adaptive styles --- */
@@ -291,6 +297,9 @@ const handleClick = (label, index) => {
     left: 0;
     height: 100vh;
     border-radius: 0 16px 16px 0;
+  }
+  .sidebar-wrapper.collapsed {
+    min-width: 0;
   }
   .sidebar-wrapper.open {
     width: 35vw;

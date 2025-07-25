@@ -105,6 +105,23 @@ const showMainComponents = computed(() => {
   pointer-events: none;
 }
 
+@media (max-width: 1920px) {
+  .main-content {
+    flex: 1;
+    width: 90%;
+    margin: 0;
+    padding: 0;
+    background: #f7f7f7d5;
+    border-radius: 0;
+    box-shadow: none;
+    padding-top: 110px;
+  }
+  .main-content.with-sidebar {
+    width: 70%;
+  }
+
+}
+
 @media (max-width: 900px) {
   .burger-btn {
     position: fixed;
