@@ -26,7 +26,10 @@ import { useRouter } from 'vue-router';
 const defaultThumbnailPath = 'assets/landmarks/default.jpg';
 const props = defineProps({
   sidebarOpen: Boolean,
-  selectedPlaces: Array
+  selectedPlaces: {
+    type: Array,
+    default: () => [] // Default to empty array to prevent undefined
+  }
 });
 const emit = defineEmits(['update:selectedPlaces']);
 
@@ -200,7 +203,7 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
 
 const showPopup = (feature, targetMap) => {
   const { geometry, properties } = feature;
-  const { name, url, image, address } = properties;
+  const { name, url, image, address, id } = properties;
 
   const truncateAddress = (addr, maxLen) => {
     if (!addr) return '';
@@ -255,7 +258,9 @@ const showPopup = (feature, targetMap) => {
         }
 
         const index = selectedRoutePoints.value.indexOf(id);
-        let updatedPlaces;
+        let updatedPlaces = Array.isArray(props.selectedPlaces) ? [...props.selectedPlaces] : [];
+        let localStoragePlaces = JSON.parse(localStorage.getItem('selectedPlaces') || '[]');
+
         if (index === -1) {
           selectedRoutePoints.value.push(id);
           addBtn.textContent = 'Убрать';
@@ -269,7 +274,9 @@ const showPopup = (feature, targetMap) => {
               address: landmarks[0].address,
               url: landmarks[0].url
             };
-            updatedPlaces = [...props.selectedPlaces, newPlace];
+            updatedPlaces = [...updatedPlaces, newPlace];
+            localStoragePlaces = [...localStoragePlaces, newPlace];
+            localStorage.setItem('selectedPlaces', JSON.stringify(localStoragePlaces));
           } else {
             console.warn('Failed to fetch landmark data for ID:', id);
             return;
@@ -278,7 +285,9 @@ const showPopup = (feature, targetMap) => {
           selectedRoutePoints.value.splice(index, 1);
           addBtn.textContent = 'Добавить';
           addBtn.classList.remove('remove');
-          updatedPlaces = props.selectedPlaces.filter(place => place.id !== id);
+          updatedPlaces = updatedPlaces.filter(place => place.id !== id);
+          localStoragePlaces = localStoragePlaces.filter(place => place.id !== id);
+          localStorage.setItem('selectedPlaces', JSON.stringify(localStoragePlaces));
         }
         emit('update:selectedPlaces', updatedPlaces);
       });
@@ -302,7 +311,6 @@ const getUserLocation = () => {
           })
             .setLngLat(userLocation.value)
             .addTo(map);
-        
         }
       },
       (error) => {
@@ -636,7 +644,6 @@ watch(() => props.selectedPlaces, async (newPlaces) => {
   selectedRoutePoints.value = newPlaces.map(place => place.id);
 }, { deep: true });
 
-// Экспортируем handleBuildRoute для использования в родительском компоненте
 defineExpose({ handleBuildRoute });
 </script>
 
@@ -741,7 +748,6 @@ defineExpose({ handleBuildRoute });
   font-size: 12px;
   border-radius: 10px;
 }
-
 
 :deep(.popup-card-body) {
   padding: 16px;
@@ -884,7 +890,6 @@ defineExpose({ handleBuildRoute });
     border-radius: 20px; 
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15); 
   }
-
 
   :deep(.popup-card-image) {
     height: 120px; 
