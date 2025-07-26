@@ -15,6 +15,9 @@
 </template>
 
 <script setup>
+
+
+
 import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue';
 import maplibregl from 'maplibre-gl';
 import expandIcon from '@/assets/icons/expand.png';
@@ -86,7 +89,7 @@ const loadOptimizedImage = async (url, targetWidth) => {
   });
 };
 
-const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value) => {
+const loadFacilities = async (targetMap, selectedIds = []) => {
   if (!targetMap || !targetMap.getSource) {
     console.error('Invalid map instance');
     return;
@@ -96,7 +99,7 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
   let facilities = [];
   try {
     if (selectedIds.length > 0) {
-      const response = await fetch(`${domain}/landmarks/facilities`, {
+      const response = await fetch(`${domain}/landmarks/`, {
         method: 'POST',
         body: JSON.stringify({ ids: selectedIds }),
         headers: { 'Content-Type': 'application/json' }
@@ -121,7 +124,7 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
       return;
     }
 
-    const newFeatures = await Promise.all(facilities.map(async facility => {
+    let newFeatures = await Promise.all(facilities.map(async facility => {
       const isSelected = selectedIds.includes(facility.id);
       const imageUrl = facility.images?.length > 0 ? facility.images[0].thumbnail_path : defaultThumbnailPath;
 
@@ -142,6 +145,7 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
         }
       };
     }));
+    newFeatures = removeDuplicateFeatures(newFeatures);
 
     const source = targetMap.getSource('markers');
     if (!source) {
@@ -159,9 +163,7 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
       id: 'unclustered-point',
       type: 'symbol',
       source: 'markers',
-      filter: selectedIds.length > 0
-        ? ['all', ['!', ['has', 'point_count']], ['==', ['get', 'isSelected'], true]]
-        : ['!', ['has', 'point_count']],
+      filter: ['!', ['has', 'point_count']],
       layout: {
         'icon-image': ['coalesce', ['get', 'markerImage'], 'default-marker'],
         'icon-size': isMobile.value ? 0.5 : 0.6,
@@ -175,8 +177,8 @@ const loadFacilities = async (targetMap, selectedIds = selectedRoutePoints.value
     });
 
     const uniqueImages = [...new Set(newFeatures
-      .filter(f => f.properties.markerImage)
-      .map(f => f.properties.markerImage))];
+        .filter(f => f.properties.markerImage)
+        .map(f => f.properties.markerImage))];
 
     await Promise.all(uniqueImages.map(async url => {
       try {
@@ -228,9 +230,9 @@ const showPopup = (feature, targetMap) => {
   `;
 
   const popup = new maplibregl.Popup({ closeOnClick: true, className: 'custom-popup', maxWidth: '300px' })
-    .setLngLat(geometry.coordinates)
-    .setHTML(popupHTML)
-    .addTo(targetMap);
+      .setLngLat(geometry.coordinates)
+      .setHTML(popupHTML)
+      .addTo(targetMap);
 
   setTimeout(() => {
     const btn = popup.getElement().querySelector('.popup-card-link');
@@ -289,40 +291,39 @@ const showPopup = (feature, targetMap) => {
 const getUserLocation = () => {
   if ('geolocation' in navigator) {
     watchId.value = navigator.geolocation.watchPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        userLocation.value = [longitude, latitude];
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          userLocation.value = [longitude, latitude];
 
-        if (userMarker.value) {
-          userMarker.value.setLngLat(userLocation.value);
-        } else {
-          userMarker.value = new maplibregl.Marker({
-            color: '#FF0000',
-            scale: 0.8
-          })
-            .setLngLat(userLocation.value)
-            .addTo(map);
-        
+          if (userMarker.value) {
+            userMarker.value.setLngLat(userLocation.value);
+          } else {
+            userMarker.value = new maplibregl.Marker({
+              color: '#FF0000',
+              scale: 0.8
+            })
+                .setLngLat(userLocation.value)
+                .addTo(map);
+          }
+        },
+        (error) => {
+          console.error('Ошибка получения геопозиции:', error);
+          userLocation.value = null;
+          let message = 'Не удалось определить ваше местоположение.';
+          if (error.code === error.PERMISSION_DENIED) {
+            message = 'Доступ к геолокации запрещён. Пожалуйста, разрешите доступ в настройках браузера.';
+          } else if (error.code === error.POSITION_UNAVAILABLE) {
+            message = 'Местоположение недоступно. Проверьте подключение к интернету или настройки устройства.';
+          } else if (error.code === error.TIMEOUT) {
+            message = 'Превышено время ожидания для получения местоположения. Попробуйте снова.';
+          }
+          alert(message);
+        },
+        {
+          enableHighAccuracy: true,
+          maximumAge: 0,
+          timeout: 10000
         }
-      },
-      (error) => {
-        console.error('Ошибка получения геопозиции:', error);
-        userLocation.value = null;
-        let message = 'Не удалось определить ваше местоположение.';
-        if (error.code === error.PERMISSION_DENIED) {
-          message = 'Доступ к геолокации запрещён. Пожалуйста, разрешите доступ в настройках браузера.';
-        } else if (error.code === error.POSITION_UNAVAILABLE) {
-          message = 'Местоположение недоступно. Проверьте подключение к интернету или настройки устройства.';
-        } else if (error.code === error.TIMEOUT) {
-          message = 'Превышено время ожидания для получения местоположения. Попробуйте снова.';
-        }
-        alert(message);
-      },
-      {
-        enableHighAccuracy: true,
-        maximumAge: 0,
-        timeout: 10000
-      }
     );
   } else {
     console.warn('Геолокация не поддерживается браузером');
@@ -360,7 +361,17 @@ const getLandmarksByIDs = async (ids) => {
     return [];
   }
 };
-
+function removeDuplicateFeatures(features) {
+  const seen = new Set();
+  return features.filter(f => {
+    const key = f.geometry.coordinates.join(',');
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+}
 function getRoute(points) {
   return new Promise((resolve, reject) => {
     try {
@@ -372,76 +383,76 @@ function getRoute(points) {
       }
 
       const coordinates = points
-        .map(p => {
-          if (!p.location || typeof p.location.lng !== 'number' || typeof p.location.lat !== 'number') {
-            console.error('Invalid point format:', p);
-            throw new Error('Invalid point format');
-          }
-          return `${p.location.lng},${p.location.lat}`;
-        })
-        .join(';');
+          .map(p => {
+            if (!p.location || typeof p.location.lng !== 'number' || typeof p.location.lat !== 'number') {
+              console.error('Invalid point format:', p);
+              throw new Error('Invalid point format');
+            }
+            return `${p.location.lng},${p.location.lat}`;
+          })
+          .join(';');
       const url = `https://router.project-osrm.org/route/v1/walking/${coordinates}?overview=full&geometries=geojson`;
 
       fetch(url)
-        .then(res => {
-          if (!res.ok) {
-            console.error('OSRM API error, status:', res.status, 'statusText:', res.statusText);
-            throw new Error(`HTTP error: ${res.status}`);
-          }
-          return res.json();
-        })
-        .then(data => {
-          if (data.routes && data.routes[0]) {
-            const route = data.routes[0];
-
-            const routeGeojson = {
-              type: 'Feature',
-              properties: {},
-              geometry: route.geometry
-            };
-
-            if (!map.getSource(routeSourceId)) {
-              map.addSource(routeSourceId, {
-                type: 'geojson',
-                data: routeGeojson
-              });
-              map.addLayer({
-                id: 'route-line',
-                type: 'line',
-                source: routeSourceId,
-                layout: {
-                  'line-join': 'round',
-                  'line-cap': 'round'
-                },
-                paint: {
-                  'line-color': '#2d4834',
-                  'line-width': [
-                    'interpolate',
-                    ['linear'],
-                    ['zoom'],
-                    10, 3,
-                    15, 5,
-                    20, 8
-                  ],
-                  'line-opacity': 0.8
-                }
-              });
-            } else {
-              map.getSource(routeSourceId).setData(routeGeojson);
+          .then(res => {
+            if (!res.ok) {
+              console.error('OSRM API error, status:', res.status, 'statusText:', res.statusText);
+              throw new Error(`HTTP error: ${res.status}`);
             }
+            return res.json();
+          })
+          .then(data => {
+            if (data.routes && data.routes[0]) {
+              const route = data.routes[0];
 
-            resolve();
-          } else {
-            console.warn('Маршрут не найден, API response:', data);
-            alert('Маршрут не найден. Проверьте выбранные точки.');
-            reject(new Error('Маршрут не найден'));
-          }
-        })
-        .catch(err => {
-          console.error('Ошибка при построении маршрута:', err);
-          alert('Ошибка при построении маршрута. Попробуйте позже.');
-          reject(err);
-        });
+              const routeGeojson = {
+                type: 'Feature',
+                properties: {},
+                geometry: route.geometry
+              };
+
+              if (!map.getSource(routeSourceId)) {
+                map.addSource(routeSourceId, {
+                  type: 'geojson',
+                  data: routeGeojson
+                });
+                map.addLayer({
+                  id: 'route-line',
+                  type: 'line',
+                  source: routeSourceId,
+                  layout: {
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                  },
+                  paint: {
+                    'line-color': '#2d4834',
+                    'line-width': [
+                      'interpolate',
+                      ['linear'],
+                      ['zoom'],
+                      10, 3,
+                      15, 5,
+                      20, 8
+                    ],
+                    'line-opacity': 0.8
+                  }
+                });
+              } else {
+                map.getSource(routeSourceId).setData(routeGeojson);
+              }
+
+              resolve();
+            } else {
+              console.warn('Маршрут не найден, API response:', data);
+              alert('Маршрут не найден. Проверьте выбранные точки.');
+              reject(new Error('Маршрут не найден'));
+            }
+          })
+          .catch(err => {
+            console.error('Ошибка при построении маршрута:', err);
+            alert('Ошибка при построении маршрута. Попробуйте позже.');
+            reject(err);
+          });
     } catch (error) {
       console.error('Ошибка в getRoute:', error);
       alert('Ошибка при построении маршрута. Попробуйте позже.');
@@ -468,18 +479,90 @@ const handleBuildRoute = async (places) => {
     }
 
     const routePoints = userLocation.value
-      ? [
+        ? [
           { location: { lng: userLocation.value[0], lat: userLocation.value[1] } },
           ...landmarks.map(landmark => ({
             location: { lng: landmark.location[0], lat: landmark.location[1] }
           }))
         ]
-      : landmarks.map(landmark => ({
+        : landmarks.map(landmark => ({
           location: { lng: landmark.location[0], lat: landmark.location[1] }
         }));
 
     isRouting.value = true;
-    await loadFacilities(map, selectedRoutePoints.value);
+
+    // Формируем GeoJSON только для маркеров маршрута
+    let newFeatures = await Promise.all(landmarks.map(async facility => {
+      const imageUrl = facility.images?.length > 0 ? facility.images[0].thumbnail_path : defaultThumbnailPath;
+      return {
+        type: 'Feature',
+        properties: {
+          id: facility.id,
+          name: facility.name,
+          address: facility.address,
+          url: facility.url || '',
+          image: `${domain}/${imageUrl}`,
+          markerImage: `${domain}/${imageUrl}`,
+          isSelected: true
+        },
+        geometry: {
+          type: 'Point',
+          coordinates: [facility.location[0], facility.location[1]]
+        }
+      };
+    }));
+    newFeatures = removeDuplicateFeatures(newFeatures);
+
+    const source = map.getSource('markers');
+    if (!source) {
+      console.error('Markers source not found');
+      return;
+    }
+
+    source.setData({ type: 'FeatureCollection', features: newFeatures });
+
+    if (map.getLayer('unclustered-point')) {
+      map.removeLayer('unclustered-point');
+    }
+
+    map.addLayer({
+      id: 'unclustered-point',
+      type: 'symbol',
+      source: 'markers',
+      filter: ['!', ['has', 'point_count']],
+      layout: {
+        'icon-image': ['coalesce', ['get', 'markerImage'], 'default-marker'],
+        'icon-size': isMobile.value ? 0.5 : 0.6,
+        'icon-allow-overlap': true,
+        'icon-anchor': 'bottom',
+        'icon-padding': 10
+      },
+      paint: {
+        'icon-opacity': 1
+      }
+    });
+
+    const markerSize = isMobile.value ? 150 : 100;
+    const uniqueImages = [...new Set(newFeatures
+        .filter(f => f.properties.markerImage)
+        .map(f => f.properties.markerImage))];
+
+    await Promise.all(uniqueImages.map(async url => {
+      try {
+        if (!map.hasImage(url)) {
+          const optimizedUrl = await loadOptimizedImage(url, markerSize);
+          if (optimizedUrl) {
+            const img = new Image();
+            img.src = optimizedUrl;
+            await img.decode();
+            map.addImage(url, img);
+          }
+        }
+      } catch (e) {
+        console.warn(`Error loading image ${url}`, e);
+      }
+    }));
+
     await getRoute(routePoints);
     isRouting.value = false;
 
@@ -506,6 +589,8 @@ const clearRoute = () => {
       geometry: { type: 'LineString', coordinates: [] }
     });
   }
+  // Перезагружаем все маркеры после очистки маршрута
+  loadFacilities(map, []);
 };
 
 onMounted(async () => {
@@ -614,7 +699,8 @@ onMounted(async () => {
     });
 
     map.on('moveend', async () => {
-      if (!isRouting.value) {
+      // Не загружаем маркеры, если активен режим маршрута
+      if (!isRouting.value && selectedRoutePoints.value.length === 0) {
         await loadFacilities(map, []);
       }
     });
@@ -636,8 +722,10 @@ watch(() => props.selectedPlaces, async (newPlaces) => {
   selectedRoutePoints.value = newPlaces.map(place => place.id);
 }, { deep: true });
 
-// Экспортируем handleBuildRoute для использования в родительском компоненте
-defineExpose({ handleBuildRoute });
+defineExpose({ handleBuildRoute, clearRoute });
+
+
+
 </script>
 
 <style scoped>

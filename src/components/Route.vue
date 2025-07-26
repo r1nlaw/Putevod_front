@@ -122,6 +122,7 @@ const buildRoute = () => {
 
 const clearRoute = () => {
   selectedPlaces.value = [];
+  mapView.value.clearRoute();
   localStorage.setItem('selectedPlaces', JSON.stringify([]));
   emit('update:selectedPlaces', []);
 };
