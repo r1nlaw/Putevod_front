@@ -89,9 +89,10 @@
         <form @submit.prevent="saveProfile">
           <div class="modal-content">
             <label class="avatar-upload">
+              <span>Изменить аватар</span>
               <input type="file" accept="image/*" @change="onFileChange" hidden />
               <img :src="getAvatarSrc" alt="Аватар" class="avatar-small" />
-              <span>Изменить аватар</span>
+              
             </label>
 
             <label>Имя пользователя</label>
@@ -446,6 +447,10 @@ function onFileChange(e) {
   z-index: 10;
 }
 
+.avatar-upload {
+  
+}
+
 .avatar-small {
   width: 100px;
   height: 100px;
@@ -491,6 +496,10 @@ h1 {
   font-weight: 700;
   color: #111827;
   margin: 0;
+}
+
+.edit_avatar_modal {
+  margin-bottom: 50px;
 }
 
 .check-icon {
@@ -582,7 +591,6 @@ button:hover {
   flex-wrap: wrap;
 }
 
-/* Modal styles */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -608,9 +616,12 @@ button:hover {
 
 .modal h2 {
   margin-top: 0;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 600;
   margin-bottom: 1.5rem;
   color: #111827;
 }
+
 
 .modal-content {
   display: flex;
