@@ -5,7 +5,7 @@
         class="banner"
         :style="{ backgroundImage: `url('https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=1470&q=80')` }"
     >
-      <label v-if="isEditing" class="avatar-upload">
+      <label v-if="showModal" class="avatar-upload">
         <input type="file" accept="image/*" @change="onFileChange" hidden />
         <img :src="getAvatarSrc" alt="Аватар" class="avatar editable" />
       </label>
@@ -17,10 +17,7 @@
       <div class="info-header">
         <div class="text-info">
           <div class="title-with-icon">
-            <div v-if="isEditing">
-              <input v-model="edited.user_name" class="edit-input title-input" placeholder="Имя пользователя" />
-            </div>
-            <h1 v-else>{{ profile.user_name || 'Без имени' }}</h1>
+            <h1>{{ profile.user_name || 'Без имени' }}</h1>
             <svg
                 class="check-icon"
                 fill="currentColor"
@@ -34,14 +31,7 @@
               />
             </svg>
           </div>
-          <div v-if="isEditing">
-            <input v-model="edited.bio" class="edit-input subtitle-input" placeholder="Биография" />
-            <input v-model="edited.country" class="edit-input" placeholder="Страна" />
-            <input v-model="edited.city" class="edit-input" placeholder="Город" />
-            <input v-model="edited.website_url" class="edit-input" placeholder="Веб-сайт" />
-            <input v-model="edited.gender" class="edit-input" placeholder="Пол" />
-          </div>
-          <p v-else class="subtitle">
+          <p class="subtitle">
             {{ profile.bio || 'Нет биографии' }} <span class="emoji"></span>
           </p>
           <p class="readers-count">
@@ -59,9 +49,7 @@
 
         <div class="buttons-group">
           <button>Статистика</button>
-          <button @click="toggleEdit">
-            {{ isEditing ? 'Сохранить' : 'Редактировать' }}
-          </button>
+          <button @click="openModal">Редактировать</button>
           <button aria-label="Дополнительные опции">...</button>
         </div>
       </div>
@@ -69,38 +57,79 @@
       <div class="info-grid">
         <div>
           <h3>Информация</h3>
-          <div v-if="isEditing">
-            <textarea v-model="edited.bio" class="edit-input description-input" placeholder="Биография"></textarea>
-          </div>
-          <div v-else>
+          <div>
             <p><strong>Страна:</strong> {{ profile.country || 'Не указана' }}</p>
             <p><strong>Город:</strong> {{ profile.city || 'Не указан' }}</p>
             <p><strong>Веб-сайт:</strong> {{ profile.website_url || 'Не указан' }}</p>
-            <p><strong>Пол:</strong> {{ profile.gender || 'Не указан' }}</p>
+            <p><strong>Пол:</strong> {{ displayGender(profile.gender) || 'Не указан' }}</p>
           </div>
         </div>
 
         <div class="location-category">
           <div class="location">
             <h3>Местоположение</h3>
-            <p v-if="isEditing">
-              <input v-model="edited.city" class="edit-input" placeholder="Город" />
-              <input v-model="edited.country" class="edit-input" placeholder="Страна" />
-            </p>
-            <p v-else>{{ profile.city || 'Астана' }}, {{ profile.country || 'Казахстан' }}</p>
+            <p>{{ profile.city || 'Астана' }}, {{ profile.country || 'Казахстан' }}</p>
           </div>
           <div class="category">
             <h3>Категория</h3>
-            <p v-if="isEditing">
-              <input v-model="edited.category" class="edit-input" placeholder="Категория" />
-            </p>
-            <p v-else>{{ profile.category || 'Пешие путешествия' }}</p>
+            <p>{{ profile.category || 'Пешие путешествия' }}</p>
           </div>
         </div>
       </div>
 
       <div class="social-links">
         <!-- ... остальные ссылки без изменений ... -->
+      </div>
+    </div>
+
+    <!-- Modal for editing -->
+    <div v-if="showModal" class="modal-overlay">
+      <div class="modal">
+        <h2>Редактировать профиль</h2>
+        <form @submit.prevent="saveProfile">
+          <div class="modal-content">
+            <label class="avatar-upload">
+              <input type="file" accept="image/*" @change="onFileChange" hidden />
+              <img :src="getAvatarSrc" alt="Аватар" class="avatar-small" />
+              <span>Изменить аватар</span>
+            </label>
+
+            <label>Имя пользователя</label>
+            <input v-model="edited.user_name" class="edit-input" placeholder="Имя пользователя" />
+
+            <label>Биография</label>
+            <textarea v-model="edited.bio" class="edit-input description-input" placeholder="Биография"></textarea>
+
+            <label>Страна</label>
+            <select v-model="edited.country" class="edit-input" @change="updateCities">
+              <option value="" disabled>Выберите страну</option>
+              <option v-for="country in countries" :key="country" :value="country">{{ country }}</option>
+            </select>
+
+            <label>Город</label>
+            <select v-model="edited.city" class="edit-input">
+              <option value="" disabled>Выберите город</option>
+              <option v-for="city in availableCities" :key="city" :value="city">{{ city }}</option>
+            </select>
+
+            <label>Веб-сайт</label>
+            <input v-model="edited.website_url" class="edit-input" placeholder="Веб-сайт" />
+
+            <label>Пол</label>
+            <select v-model="edited.gender" class="edit-input">
+              <option value="" disabled>Выберите пол</option>
+              <option v-for="(label, value) in genderMap" :key="value" :value="value">{{ label }}</option>
+            </select>
+
+            <label>Категория</label>
+            <input v-model="edited.category" class="edit-input" placeholder="Категория" />
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" @click="closeModal">Отмена</button>
+            <button type="submit">Сохранить</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
@@ -111,7 +140,7 @@ import { reactive, ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import avatarImage from '@/assets/images/user_avatar.png'
 
-const isEditing = ref(false)
+const showModal = ref(false)
 const router = useRouter()
 
 const profile = reactive({
@@ -124,7 +153,7 @@ const profile = reactive({
   gender: '',
   avatar_url: '',
   category: '',
-  rating: 0,
+  rating:0,
   routes: []
 })
 
@@ -138,6 +167,52 @@ const edited = reactive({
   avatar: null,
   category: ''
 })
+
+const genderMap = ref({
+  male: 'Мужской',
+  female: 'Женский',
+  prefer_not_to_say: 'Не указан'
+})
+
+const countries = ref(['Казахстан', 'Россия', 'Беларусь', 'Узбекистан'])
+
+const cityMap = ref({
+  Казахстан: ['Астана', 'Алматы', 'Караганда', 'Шымкент', 'Актобе'],
+  Россия: [
+    'Москва',
+    'Санкт-Петербург',
+    'Симферополь',
+    'Севастополь',
+    'Керчь',
+    'Евпатория',
+    'Судак',
+    'Бахчисарай',
+    'Феодосия',
+    'Новосибирск',
+    'Екатеринбург',
+    'Казань',
+    'Нижний Новгород',
+    'Челябинск',
+    'Самара',
+    'Омск',
+    'Ростов-на-Дону',
+    'Уфа',
+    'Красноярск',
+    'Воронеж',
+    'Пермь',
+    'Волгоград',
+    'Краснодар',
+    'Саратов',
+    'Тюмень',
+    'Тольятти',
+    'Ижевск'
+  ],
+  Украина: ['Киев', 'Харьков', 'Одесса', 'Днепр', 'Львов'],
+  Беларусь: ['Минск', 'Гомель', 'Могилёв', 'Витебск', 'Гродно'],
+  Узбекистан: ['Ташкент', 'Самарканд', 'Бухара', 'Фергана', 'Наманган']
+})
+
+const availableCities = ref([])
 
 const domain = import.meta.env.VITE_BACKEND_URL
 
@@ -204,19 +279,54 @@ onMounted(async () => {
       avatar: null,
       category: profile.category
     })
+
+    // Инициализация списка городов для текущей страны
+    updateCities()
   } catch (err) {
     console.error('Ошибка при загрузке профиля:', err)
     alert('Не удалось загрузить профиль: ' + err.message)
   }
 })
+
 const getAvatarSrc = computed(() => {
   if (edited.avatar) {
-    return URL.createObjectURL(edited.avatar) // Предпросмотр загруженного файла
+    return URL.createObjectURL(edited.avatar)
   }
   return profile.avatar_url || avatarImage
 })
 
-async function toggleEdit() {
+const displayGender = computed(() => {
+  return (gender) => genderMap.value[gender] || gender
+})
+
+function updateCities() {
+  const selectedCountry = edited.country
+  availableCities.value = cityMap.value[selectedCountry] || []
+  if (!availableCities.value.includes(edited.city)) {
+    edited.city = ''
+  }
+}
+
+function openModal() {
+  Object.assign(edited, {
+    user_name: profile.user_name,
+    bio: profile.bio,
+    city: profile.city,
+    country: profile.country,
+    website_url: profile.website_url,
+    gender: profile.gender,
+    avatar: null,
+    category: profile.category
+  })
+  updateCities()
+  showModal.value = true
+}
+
+function closeModal() {
+  showModal.value = false
+}
+
+async function saveProfile() {
   const token = localStorage.getItem('token')
   const user_id = localStorage.getItem('user_id')
 
@@ -226,78 +336,63 @@ async function toggleEdit() {
     return
   }
 
-  if (isEditing.value) {
-    try {
-      const formData = new FormData()
-      formData.append('user_id', user_id)
-      formData.append('user_name', edited.user_name || '')
-      formData.append('bio', edited.bio || '')
-      formData.append('country', edited.country || '')
-      formData.append('city', edited.city || '') // Используем "city" вместо "cite"
-      formData.append('website_url', edited.website_url || '')
-      formData.append('gender', edited.gender || '')
-      if (edited.avatar instanceof File) {
-        formData.append('avatar', edited.avatar)
-      }
-
-      console.log('Отправляем FormData:', [...formData.entries()]) // Отладка
-
-      const response = await fetch(`${domain}/user/profile/change/${user_id}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        if (response.status === 401) {
-          alert('Сессия истекла. Пожалуйста, войдите снова.')
-          localStorage.removeItem('token')
-          localStorage.removeItem('user_id')
-          router.push('/login')
-          return
-        }
-        throw new Error(errorData.message || 'Ошибка при сохранении профиля')
-      }
-
-      const responseData = await response.json()
-      const data = responseData.data || responseData
-
-      // Обновление профиля
-      Object.assign(profile, {
-        user_name: edited.user_name,
-        bio: edited.bio,
-        city: edited.city,
-        country: edited.country,
-        website_url: edited.website_url,
-        gender: edited.gender,
-        avatar_url: data.avatar_url ? `${domain}/assets/avatars/${data.avatar_url}` : profile.avatar_url,
-        category: edited.category
-      })
-
-      edited.avatar = null // Сброс файла аватара
-    } catch (err) {
-      console.error('Ошибка при сохранении профиля:', err)
-      alert('Ошибка при сохранении профиля: ' + err.message)
+  try {
+    const formData = new FormData()
+    formData.append('user_id', user_id)
+    formData.append('user_name', edited.user_name || '')
+    formData.append('bio', edited.bio || '')
+    formData.append('country', edited.country || '')
+    formData.append('city', edited.city || '')
+    formData.append('website_url', edited.website_url || '')
+    formData.append('gender', edited.gender || '')
+    if (edited.avatar instanceof File) {
+      formData.append('avatar', edited.avatar)
     }
-  } else {
-    // Вход в режим редактирования
-    Object.assign(edited, {
-      user_name: profile.user_name,
-      bio: profile.bio,
-      city: profile.city,
-      country: profile.country,
-      website_url: profile.website_url,
-      gender: profile.gender,
-      avatar: null,
-      category: profile.category
-    })
-  }
+    formData.append('category', edited.category || '')
 
-  isEditing.value = !isEditing.value
+    const response = await fetch(`${domain}/user/profile/change/${user_id}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      if (response.status === 401) {
+        alert('Сессия истекла. Пожалуйста, войдите снова.')
+        localStorage.removeItem('token')
+        localStorage.removeItem('user_id')
+        router.push('/login')
+        return
+      }
+      throw new Error(errorData.message || 'Ошибка при сохранении профиля')
+    }
+
+    const responseData = await response.json()
+    const data = responseData.data || responseData
+
+    // Обновление профиля
+    Object.assign(profile, {
+      user_name: edited.user_name,
+      bio: edited.bio,
+      city: edited.city,
+      country: edited.country,
+      website_url: edited.website_url,
+      gender: edited.gender,
+      avatar_url: data.avatar_url ? `${domain}/assets/avatars/${data.avatar_url}` : profile.avatar_url,
+      category: edited.category
+    })
+
+    edited.avatar = null
+    showModal.value = false
+  } catch (err) {
+    console.error('Ошибка при сохранении профиля:', err)
+    alert('Ошибка при сохранении профиля: ' + err.message)
+  }
 }
+
 function onFileChange(e) {
   const token = localStorage.getItem('token')
   if (!token) {
@@ -307,157 +402,126 @@ function onFileChange(e) {
 
   const file = e.target.files[0]
   if (file) {
-    // Проверка размера файла (5 МБ = 5 * 1024 * 1024 байт)
     if (file.size > 5 * 1024 * 1024) {
       alert('Файл слишком большой. Максимальный размер: 5 МБ.')
       return
     }
-    edited.avatar = file // Сохраняем объект File
+    edited.avatar = file
   }
 }
 </script>
 
-  <style scoped>
-  .container {
-    max-width: 92rem;
-    margin: 0 auto;
-    padding: 1rem;
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #ffffff;
-    color: #333;
-    border-radius: 2rem;
-  }
-  .edit-input.title-input {
-    margin-left: 0;
-    width: 105%;
-  }
-  .edit-input.subtitle-input {
-    margin-left: 8.06vw;
-    width: 49%;
-  }
-  .edit-input {
-    resize: none;
-    border: 1px solid #4949493d;
-    border-radius: 5px;
-  }
-  .edit-input.description-input {
-    resize: none;
-    width: 100%;
-  }
+<style scoped>
+.container {
+  max-width: 92rem;
+  margin: 0 auto;
+  padding: 1rem;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #ffffff;
+  color: #333;
+  border-radius: 2rem;
+}
 
-  .banner {
-    position: relative;
-    background-size: cover;
-    background-position: center;
-    border-radius: 2rem;
-    overflow: visible;
-    margin-bottom: -0.0rem;
-    height: 220px;
-  }
+.banner {
+  position: relative;
+  background-size: cover;
+  background-position: center;
+  border-radius: 2rem;
+  overflow: visible;
+  margin-bottom: -0.0rem;
+  height: 220px;
+}
 
-  .avatar {
-    position: absolute;
-    left: 1.5rem;
-    bottom: -100px;
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    border: 7px solid white;
-    object-fit: cover;
-    background-color: white;
-    box-shadow: 0 0 6px rgba(0, 0, 0, 0.15);
-    z-index: 10;
-  }
+.avatar {
+  position: absolute;
+  left: 1.5rem;
+  bottom: -100px;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  border: 7px solid white;
+  object-fit: cover;
+  background-color: white;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
 
-  .avatar-small {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    border: 7px solid white;
-    object-fit: cover;
-    background-color: white;
-    box-shadow: 0 0 6px rgba(0, 0, 0, 0.15);
-    flex-shrink: 0;
-  }
+.avatar-small {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 4px solid white;
+  object-fit: cover;
+  background-color: white;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.15);
+  margin-bottom: 1rem;
+}
 
+.info-block {
+  position: relative;
+  background-color: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  padding-top: 0.1rem;
+  margin-bottom: 1.9rem;
+}
 
-  .info-block {
-    position: relative;
-    background-color: white;
-    border-radius: 1rem;
-    padding: 1.5rem;
-    padding-top: 0.1rem;
-    margin-bottom: 1.9rem;
-  }
+.info-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  justify-content: space-between;
+}
 
-  .info-header {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    justify-content: space-between;
-  }
+.text-info {
+  display: flex;
+  flex-direction: column;
+  margin-left: 0.5rem;
+}
 
+.title-with-icon {
+  display: flex;
+  align-items: center;
+  margin-left: 9.7rem;
+  gap: 0.5rem;
+}
 
-  .avatar-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex: 1;
-  }
+h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
 
-  .text-info {
-    display: flex;
-    flex-direction: column;
-    margin-left: 0.5rem;
-  }
+.check-icon {
+  width: 20px;
+  height: 20px;
+  color: #22c55e;
+}
 
-  .title-with-icon {
-    display: flex;
-    align-items: center;
-    margin-left: 9.7rem;
-    gap: 0.5rem;
-  }
+.subtitle {
+  color: #4b5563;
+  margin-top: -0.5rem;
+  font-size: 1.125rem;
+  line-height: 1.4;
+  margin-left: 9.7rem;
+}
 
-  h1 {
-    font-size: 1.875rem;
-    font-weight: 700;
-    color: #111827;
-    margin: 0;
-  }
+.readers-count {
+  color: #6b7280;
+  margin-top: 0.25rem;
+  margin-left: 9.7rem;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
 
-  .check-icon {
-    width: 20px;
-    height: 20px;
-    color: #22c55e;
-  }
-
-  .subtitle {
-    color: #4b5563;
-    margin-top: -0.5rem;
-    font-size: 1.125rem;
-    line-height: 1.4;
-    margin-left: 9.7rem;
-  }
-
-  .emoji {
-    font-size: 1.25rem;
-  }
-
-  .readers-count {
-    color: #6b7280;
-    margin-top: 0.25rem;
-    margin-left: 9.7rem;
-    font-size: 0.875rem;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-  }
-
-  .icon-message {
-    width: 16px;
-    height: 16px;
-    color: #9ca3af;
-  }
+.icon-message {
+  width: 16px;
+  height: 16px;
+  color: #9ca3af;
+}
 
 .buttons-group {
   position: absolute;
@@ -468,19 +532,18 @@ function onFileChange(e) {
 }
 
 button {
-    padding: 0.8rem 2.5rem;
-    border-radius: 12px;
-    background-color: #f3f4f6;
-    border: none;
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
+  padding: 0.8rem 2.5rem;
+  border-radius: 12px;
+  background-color: #f3f4f6;
+  border: none;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
 button:hover {
-    background-color: #e5e7eb;
+  background-color: #e5e7eb;
 }
-
 
 .info-grid {
   display: grid;
@@ -497,7 +560,6 @@ button:hover {
   flex-direction: column;
   gap: 1rem;
   margin-left: 3rem;
-
 }
 
 .location-category h3 {
@@ -511,8 +573,98 @@ button:hover {
   color: #374151;
 }
 
+.social-links {
+  margin-top: 3rem;
+  margin-bottom: 2rem;
+  margin-left: 2rem;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  border-radius: 1rem;
+  padding: 2rem;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: #111827;
+}
+
+.modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modal-content label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.25rem;
+}
+
+.edit-input {
+  border: 1px solid #4949493d;
+  border-radius: 5px;
+  padding: 0.5rem;
+  font-size: 1rem;
+}
+
+.edit-input.description-input {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
+.modal-actions button {
+  padding: 0.5rem 1.5rem;
+}
+
+.modal-actions button:first-child {
+  background-color: #e5e7eb;
+}
+
+.modal-actions button:first-child:hover {
+  background-color: #d1d5db;
+}
+
+select.edit-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+  background-repeat: no-repeat;
+  background-position-x: 98%;
+  background-position-y: 50%;
+}
+
 @media (max-width: 900px) {
-  .banner{
+  .banner {
     max-height: 40vw;
     border-radius: 1rem;
   }
@@ -531,14 +683,10 @@ button:hover {
   .readers-count {
     font-size: 0.8rem;
   }
-  .edit-input.subtitle-input {
-    margin-left: 41.4vw;
-  }
   .info-grid {
     margin-top: 5rem;
     margin-left: 0rem;
   }
-
   .buttons-group {
     position: absolute;
     top: 28%;
@@ -547,114 +695,24 @@ button:hover {
   button {
     padding: 0.3rem 0.5rem;
     font-size: 0.8rem;
-
   }
   .info-block {
     padding: 0rem;
   }
-
-
-
 }
-
 
 @media (max-width: 640px) {
   .info-grid {
     grid-template-columns: 2fr 1fr;
   }
-  .text-info{
+  .text-info {
     margin-left: 0%;
   }
 }
 
 @media (max-width: 412px) {
-
-  .text-info{
+  .text-info {
     margin-left: -8%;
   }
 }
-
-
-  h3 {
-    margin: 0 0 0.25rem 0;
-    font-weight: 600;
-    color: #111827;
-  }
-
-  .social-links {
-    margin-top: 3rem;
-    margin-bottom: 2rem;
-    margin-left: 2rem;
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-
-  .social-link {
-    display: flex;
-    align-items: center;
-    background-color: white;
-    padding: 0.75rem 1rem;
-    border-radius: 1rem;
-    box-shadow: 0 1px 2px rgb(0 0 0 / 0.1);
-    text-decoration: none;
-    color: #111827;
-    flex-grow: 1;
-    max-width: 320px;
-    transition: box-shadow 0.2s ease;
-  }
-
-  .social-link:hover {
-    box-shadow: 0 4px 6px rgb(0 0 0 / 0.15);
-  }
-
-  .social-icon {
-    width: 30px;
-    height: 30px;
-    margin-right: 0.75rem;
-    object-fit: contain;
-  }
-
-  .social-text {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-
-  .social-text .name {
-    font-weight: 700;
-    font-size: 1rem;
-    line-height: 1.25;
-  }
-
-  .social-text .subs {
-    font-size: 0.875rem;
-    color: #6b7280;
-  }
-
-  .social-link.youtube:hover {
-    box-shadow: 0 0 10px #ff0000aa;
-  }
-
-  .social-link.twitch:hover {
-    box-shadow: 0 0 10px #9146ffaa;
-  }
-
-  .social-link.vk:hover {
-    box-shadow: 0 0 10px #4a76a8aa;
-  }
-
-  .add-button {
-    justify-content: center;
-    color: #2563eb;
-    border: 2px dashed #2563eb;
-    background-color: transparent;
-    max-width: 100px;
-  }
-
-  .add-icon {
-    width: 24px;
-    height: 24px;
-    margin-right: 0.5rem;
-  }
-  </style>
+</style>
