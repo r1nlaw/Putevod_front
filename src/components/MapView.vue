@@ -127,7 +127,6 @@ const loadFacilities = async (targetMap, selectedIds = []) => {
     let newFeatures = await Promise.all(facilities.map(async facility => {
       const isSelected = selectedIds.includes(facility.id);
       const imageUrl = facility.images?.length > 0 ? facility.images[0].thumbnail_path : defaultThumbnailPath;
-
       return {
         type: 'Feature',
         properties: {
