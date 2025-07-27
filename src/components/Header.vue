@@ -22,7 +22,7 @@
           v-model="searchQuery"
           @keyup.enter="handleSearch"
           @input="debouncedSearch"
-          aria-label="Поиск достопримечательностей"
+          aria-label="поиск"
           ref="searchInput"
         />
         <img

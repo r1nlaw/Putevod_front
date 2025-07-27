@@ -78,21 +78,34 @@
       </div>
 
       <div class="social-links">
-        <!-- ... остальные ссылки без изменений ... -->
+       
       </div>
     </div>
 
     <!-- Modal for editing -->
     <div v-if="showModal" class="modal-overlay">
       <div class="modal">
+        <button class="close-button" @click="closeModal" aria-label="Закрыть модальное окно">
+          <svg
+            class="close-icon"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </button>
         <h2>Редактировать профиль</h2>
         <form @submit.prevent="saveProfile">
           <div class="modal-content">
             <label class="avatar-upload">
-              <span>Изменить аватар</span>
               <input type="file" accept="image/*" @change="onFileChange" hidden />
               <img :src="getAvatarSrc" alt="Аватар" class="avatar-small" />
-              
+              <h3 class="edit_avatar_modal">Изменить аватар</h3>
             </label>
 
             <label>Имя пользователя</label>
@@ -127,8 +140,7 @@
           </div>
 
           <div class="modal-actions">
-            <button type="button" @click="closeModal">Отмена</button>
-            <button type="submit">Сохранить</button>
+            <button class="save-action" type="submit">Сохранить</button>
           </div>
         </form>
       </div>
@@ -448,7 +460,8 @@ function onFileChange(e) {
 }
 
 .avatar-upload {
-  
+  display: flex;
+  gap: 1vw;
 }
 
 .avatar-small {
@@ -459,7 +472,6 @@ function onFileChange(e) {
   object-fit: cover;
   background-color: white;
   box-shadow: 0 0 6px rgba(0, 0, 0, 0.15);
-  margin-bottom: 1rem;
 }
 
 .info-block {
@@ -498,14 +510,19 @@ h1 {
   margin: 0;
 }
 
-.edit_avatar_modal {
-  margin-bottom: 50px;
-}
-
 .check-icon {
   width: 20px;
   height: 20px;
   color: #22c55e;
+}
+.save-action {
+  width: 100%;
+}
+
+.edit_avatar_modal {
+  display: flex;
+  justify-content: center; 
+  align-items: center; 
 }
 
 .subtitle {
@@ -609,9 +626,14 @@ button:hover {
   border-radius: 1rem;
   padding: 2rem;
   width: 100%;
-  max-width: 500px;
+  max-width: 550px;
   max-height: 90vh;
   overflow-y: auto;
+  position: relative; 
+}
+
+.modal {
+  scrollbar-width: none;
 }
 
 .modal h2 {
@@ -622,6 +644,28 @@ button:hover {
   color: #111827;
 }
 
+.close-button {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-icon {
+  width: 24px;
+  height: 24px;
+  color: #374151;
+}
+
+.close-button:hover .close-icon {
+  color: #111827;
+}
 
 .modal-content {
   display: flex;
@@ -654,18 +698,6 @@ button:hover {
   margin-top: 1.5rem;
 }
 
-.modal-actions button {
-  padding: 0.5rem 1.5rem;
-}
-
-.modal-actions button:first-child {
-  background-color: #e5e7eb;
-}
-
-.modal-actions button:first-child:hover {
-  background-color: #d1d5db;
-}
-
 select.edit-input {
   appearance: none;
   background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
@@ -681,6 +713,9 @@ select.edit-input {
   }
   h1 {
     font-size: 1.4rem;
+  }
+  h2 {
+    font-size: 1.1rem;
   }
   .subtitle {
     font-size: 1.0rem;
@@ -704,8 +739,8 @@ select.edit-input {
     right: 0;
   }
   button {
-    padding: 0.3rem 0.5rem;
-    font-size: 0.8rem;
+    padding: 0.6rem 0.5rem;
+    font-size: 0.9rem;
   }
   .info-block {
     padding: 0rem;
