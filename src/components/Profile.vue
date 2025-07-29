@@ -31,8 +31,8 @@
               />
             </svg>
           </div>
-          <p class="subtitle">
-            {{ profile.bio || 'Нет биографии' }} <span class="emoji"></span>
+          <p class="status">
+            {{ profile.status || '' }} <span class="emoji"></span>
           </p>
           <p class="readers-count">
             <svg
@@ -56,12 +56,11 @@
 
       <div class="info-grid">
         <div>
-          <h3>Информация</h3>
+          <h3>Био</h3>
           <div>
-            <p><strong>Страна:</strong> {{ profile.country || 'Не указана' }}</p>
-            <p><strong>Город:</strong> {{ profile.city || 'Не указан' }}</p>
-            <p><strong>Веб-сайт:</strong> {{ profile.website_url || 'Не указан' }}</p>
-            <p><strong>Пол:</strong> {{ displayGender(profile.gender) || 'Не указан' }}</p>
+            <p class="subtitle">
+            {{ profile.bio || '' }} <span class="emoji"></span>
+          </p>
           </div>
         </div>
 
@@ -75,11 +74,28 @@
             <p>{{ profile.category || 'Пешие путешествия' }}</p>
           </div>
         </div>
+
+        <div class="social-media">
+          <div v-for="(social, index) in profile.social_media" :key="index" class="social-card">
+            <div class="social-icon">
+              <svg v-if="social.platform === 'youtube'" class="platform-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.377.505 9.377.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+              </svg>
+              <svg v-if="social.platform === 'twitch'" class="platform-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M2.149 0l-2.149 2.15v18.846h7.168v3.004h3.004v-3.004h3.996v-7.168h-14.019zm18.846 0h-7.168l2.149 2.15 5.019 5.019v-7.169zm-10.019 10.019h3.996v3.996h-3.996v-3.996zm8.004-8.004h-18.85v21.152h5.019v-14.019h13.831v-7.133z"/>
+              </svg>
+              <svg v-if="social.platform === 'meteliyox'" class="platform-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+              </svg>
+            </div>
+            <div class="social-content">
+              <span class="social-name">{{ social.name }}</span>
+              <a :href="social.link" target="_blank" class="social-link">{{ social.link }}</a>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="social-links">
-       
-      </div>
     </div>
 
     <!-- Modal for editing -->
@@ -108,11 +124,20 @@
               <h3 class="edit_avatar_modal">Изменить аватар</h3>
             </label>
 
-            <label>Имя пользователя</label>
-            <input v-model="edited.user_name" class="edit-input" placeholder="Имя пользователя" />
+            <label>Имя пользователя
+              <span class="char-count">Осталось: {{ remainingChars.userName }} / 20</span>
+            </label>
+            <input v-model="edited.user_name" class="edit-input" placeholder="Имя пользователя" maxlength="20" />
 
-            <label>Биография</label>
-            <textarea v-model="edited.bio" class="edit-input description-input" placeholder="Биография"></textarea>
+            <label>Статус
+              <span class="char-count">Осталось: {{ remainingChars.status }} / 50</span>
+            </label>
+            <input v-model="edited.status" class="edit-input" placeholder="Статус" maxlength="50" />
+
+            <label>Биография
+              <span class="char-count">Осталось: {{ remainingChars.bio }} / 500</span>
+            </label>
+            <textarea v-model="edited.bio" class="edit-input description-input" placeholder="Биография" maxlength="500"></textarea>
 
             <label>Страна</label>
             <select v-model="edited.country" class="edit-input" @change="updateCities">
@@ -137,6 +162,14 @@
 
             <label>Категория</label>
             <input v-model="edited.category" class="edit-input" placeholder="Категория" />
+
+            <label>Социальные сети</label>
+            <div v-for="(social, index) in edited.social_media" :key="index" class="social-edit">
+              <input v-model="social.name" class="edit-input" placeholder="Название" />
+              <input v-model="social.link" class="edit-input" placeholder="Ссылка" />
+              <button type="button" @click="removeSocial(index)" class="remove-social">Удалить</button>
+            </div>
+            <button type="button" @click="addSocial" class="add-social">Добавить соцсеть</button>
           </div>
 
           <div class="modal-actions">
@@ -159,6 +192,7 @@ const router = useRouter()
 const profile = reactive({
   user_id: null,
   user_name: '',
+  status: '',
   bio: '',
   city: '',
   country: '',
@@ -166,19 +200,29 @@ const profile = reactive({
   gender: '',
   avatar_url: '',
   category: '',
-  rating:0,
-  routes: []
+  rating: 0,
+  routes: [],
+  social_media: [
+    { platform: 'youtube', name: 'Блог Дениса', link: 'https://youtube.com/@blogdenisa' },
+    { platform: 'twitch', name: 'TripLive', link: 'https://twitch.tv/triplive' },
+    { platform: 'meteliyox', name: 'Денис Иващенко', link: 'https://meteliyox.com' },
+    { platform: 'youtube', name: 'Блог Дениса', link: 'https://youtube.com/@blogdenisa' },
+    { platform: 'twitch', name: 'TripLive', link: 'https://twitch.tv/triplive' },
+    { platform: 'meteliyox', name: 'Денис Иващенко', link: 'https://meteliyox.com' },
+  ]
 })
 
 const edited = reactive({
   user_name: '',
+  status: '',
   bio: '',
   city: '',
   country: '',
   website_url: '',
   gender: '',
   avatar: null,
-  category: ''
+  category: '',
+  social_media: [...profile.social_media]
 })
 
 const genderMap = ref({
@@ -267,6 +311,7 @@ onMounted(async () => {
     // Заполнение профиля
     profile.user_id = data.user_id || user_id
     profile.user_name = data.user_name || localStorage.getItem('username') || ''
+    profile.status = data.status || 'Люблю путешествовать.'
     profile.bio = data.bio || 'Люблю путешествовать и открывать новые маршруты!'
     profile.city = data.city || ''
     profile.country = data.country || ''
@@ -280,17 +325,27 @@ onMounted(async () => {
       { id: 2, name: 'Пеший маршрут по горам' },
       { id: 3, name: 'Велоэкскурсия по городу' }
     ]
+    profile.social_media = data.social_media || [
+      { platform: 'youtube', name: 'Блог Дениса', link: 'https://youtube.com/@blogdenisa' },
+      { platform: 'twitch', name: 'TripLive', link: 'https://twitch.tv/triplive' },
+      { platform: 'meteliyox', name: 'Денис Иващенко', link: 'https://meteliyox.com' },
+      { platform: 'youtube', name: 'Блог Дениса', link: 'https://youtube.com/@blogdenisa' },
+      { platform: 'twitch', name: 'TripLive', link: 'https://twitch.tv/triplive' },
+      { platform: 'meteliyox', name: 'Денис Иващенко', link: 'https://meteliyox.com' },
+    ]
 
     // Инициализация полей редактирования
     Object.assign(edited, {
       user_name: profile.user_name,
+      status: profile.status,
       bio: profile.bio,
       city: profile.city,
       country: profile.country,
       website_url: profile.website_url,
       gender: profile.gender,
       avatar: null,
-      category: profile.category
+      category: profile.category,
+      social_media: [...profile.social_media]
     })
 
     // Инициализация списка городов для текущей страны
@@ -312,6 +367,14 @@ const displayGender = computed(() => {
   return (gender) => genderMap.value[gender] || gender
 })
 
+const remainingChars = computed(() => {
+  return {
+    userName: 20 - (edited.user_name || '').length,
+    status: 50 - (edited.status || '').length,
+    bio: 500 - (edited.bio || '').length
+  }
+})
+
 function updateCities() {
   const selectedCountry = edited.country
   availableCities.value = cityMap.value[selectedCountry] || []
@@ -323,13 +386,15 @@ function updateCities() {
 function openModal() {
   Object.assign(edited, {
     user_name: profile.user_name,
+    status: profile.status,
     bio: profile.bio,
     city: profile.city,
     country: profile.country,
     website_url: profile.website_url,
     gender: profile.gender,
     avatar: null,
-    category: profile.category
+    category: profile.category,
+    social_media: [...profile.social_media]
   })
   updateCities()
   showModal.value = true
@@ -337,6 +402,14 @@ function openModal() {
 
 function closeModal() {
   showModal.value = false
+}
+
+function addSocial() {
+  edited.social_media.push({ platform: 'dobaviti', name: '', link: '' })
+}
+
+function removeSocial(index) {
+  edited.social_media.splice(index, 1)
 }
 
 async function saveProfile() {
@@ -353,6 +426,7 @@ async function saveProfile() {
     const formData = new FormData()
     formData.append('user_id', user_id)
     formData.append('user_name', edited.user_name || '')
+    formData.append('status', edited.status || '')
     formData.append('bio', edited.bio || '')
     formData.append('country', edited.country || '')
     formData.append('city', edited.city || '')
@@ -362,6 +436,7 @@ async function saveProfile() {
       formData.append('avatar', edited.avatar)
     }
     formData.append('category', edited.category || '')
+    formData.append('social_media', JSON.stringify(edited.social_media))
 
     const response = await fetch(`${domain}/user/profile/change/${user_id}`, {
       method: 'POST',
@@ -389,13 +464,15 @@ async function saveProfile() {
     // Обновление профиля
     Object.assign(profile, {
       user_name: edited.user_name,
+      status: edited.status,
       bio: edited.bio,
       city: edited.city,
       country: edited.country,
       website_url: edited.website_url,
       gender: edited.gender,
       avatar_url: data.avatar_url ? `${domain}/assets/avatars/${data.avatar_url}` : profile.avatar_url,
-      category: edited.category
+      category: edited.category,
+      social_media: edited.social_media
     })
 
     edited.avatar = null
@@ -515,6 +592,7 @@ h1 {
   height: 20px;
   color: #22c55e;
 }
+
 .save-action {
   width: 100%;
 }
@@ -530,7 +608,7 @@ h1 {
   margin-top: -0.5rem;
   font-size: 1.125rem;
   line-height: 1.4;
-  margin-left: 9.7rem;
+  margin-top: 0rem;
 }
 
 .readers-count {
@@ -570,6 +648,14 @@ button {
 button:hover {
   background-color: #e5e7eb;
 }
+.status {
+  color: #4b5563;
+  font-size: 1.125rem;
+  line-height: 1.4;
+  margin-top: 0rem;
+  margin-left: 9.5rem;
+
+}
 
 .info-grid {
   display: grid;
@@ -599,13 +685,62 @@ button:hover {
   color: #374151;
 }
 
-.social-links {
-  margin-top: 3rem;
-  margin-bottom: 2rem;
-  margin-left: 2rem;
-  display: flex;
+.social-media {
+  margin-top: 2rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
   flex-wrap: wrap;
+}
+
+.social-card {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  height: 100px;
+  min-height: 100px;
+}
+
+.social-icon {
+  margin-right: 0.5rem;
+}
+
+.platform-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.social-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.social-name {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.social-link {
+  color: #666;
+  font-size: 0.8rem;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 20ch; 
+}
+
+.social-link:hover {
+  text-decoration: underline;
 }
 
 .modal-overlay {
@@ -677,6 +812,13 @@ button:hover {
   font-weight: 600;
   color: #374151;
   margin-bottom: 0.25rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.char-count {
+  font-size: 0.8rem;
+  color: #6b7280;
 }
 
 .edit-input {
@@ -684,11 +826,45 @@ button:hover {
   border-radius: 5px;
   padding: 0.5rem;
   font-size: 1rem;
+  width: 100%;
 }
 
 .edit-input.description-input {
   resize: vertical;
   min-height: 100px;
+}
+
+.social-edit {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.remove-social {
+  background: #ff4444;
+  color: white;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.remove-social:hover {
+  background: #cc0000;
+}
+
+.add-social {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+.add-social:hover {
+  background: #45a049;
 }
 
 .modal-actions {
@@ -745,6 +921,9 @@ select.edit-input {
   .info-block {
     padding: 0rem;
   }
+  .social-media {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 640px) {
@@ -754,11 +933,17 @@ select.edit-input {
   .text-info {
     margin-left: 0%;
   }
+  .social-media {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 412px) {
   .text-info {
     margin-left: -8%;
+  }
+  .social-media {
+    grid-template-columns: 1fr;
   }
 }
 </style>
