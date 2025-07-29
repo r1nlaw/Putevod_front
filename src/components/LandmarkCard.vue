@@ -268,13 +268,27 @@ function toggleSelection() {
   background-color: #f0f0f0;
   box-shadow: 0 4px 16px rgba(18, 83, 65, 0.12);
 }
+@media (max-width: 1919px) {
+  .landmark-card.wide-card {
+    min-width: 10vw;
+  }
+  .landmark-card {
+    min-width: 15vw;
+    max-width: 35vw;
+    border-radius: 16px;
+    min-height: 20vh;
+    max-height: 120vh;
+    box-shadow: none;
+  }
 
-@media (max-width: 768px) {
+}
+
+@media (max-width: 786px) {
   .landmark-card {
     min-width: 40vw;
     max-width: 60vw;
     border-radius: 16px;
-    min-height: 80vw;
+    min-height: 40vw;
     max-height: 120vw;
     box-shadow: none;
   }

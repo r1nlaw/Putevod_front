@@ -191,10 +191,15 @@ watch(
   margin-left: 50px;
   width: calc(100% - 80px);
 }
+
+
 @media (max-width: 900px) {
   .landmarks-grid.with-sidebar {
     margin-left: 0;
     width: calc(100%);
+  }
+  .landmarks-grid {
+    gap: 3vw;
   }
 }
 @media (max-width: 768px) {

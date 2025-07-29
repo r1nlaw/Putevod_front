@@ -10,6 +10,13 @@
           :aria-expanded="opened === idx ? 'true' : 'false'"
         >
           {{ item.title }}
+          <img
+            v-if="item.title === 'Фильтры'"
+            :src="arrow"
+            alt="Стрелка"
+            class="accordion-arrow"
+            :class="{ 'arrow-up': opened === idx }"
+          />
         </button>
       </h2>
       <div
@@ -24,7 +31,7 @@
             <FiltersChips />
           </template>
           <template v-else>
-            <strong>{{ item.bodyTitle }}</strong> {{ item.bodyText }}
+            <strong>{{ item.bodyTitle }} <img :src="arrow" alt="Аккордеон" /></strong> {{ item.bodyText }}
           </template>
         </div>
       </div>
@@ -32,14 +39,14 @@
   </div>
 </template>
 
-  
 <script setup>
 import { ref, onMounted, nextTick } from 'vue';
 import FiltersChips from './FiltersChips.vue';
+import arrow from '@/assets/icons/arrow.png';
 import Archaeology from '../assets/emoji/archaeology.png'
 const props = defineProps({ sidebarOpen: Boolean });
 
-const opened = ref(-1);
+const opened = ref(0);
 const bodies = ref([]);
 const heights = ref([]);
 
@@ -66,77 +73,101 @@ onMounted(() => {
     updateHeights();
   });
 });
-
 </script>
-  
-  <style scoped>
-  .accordion {
-    background: #fff;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    padding: 0;
-    margin: 0 auto;
-    max-width: 1750px;
-    transition: margin-left 0.3s;
-    font-family: "Montserrat", sans-serif;
-  }
 
-  .accordion.with-sidebar {
-    margin-left: 50px;
-    width: calc(100% - 80px);
-  }
-  .accordion-item + .accordion-item {
-    border-top: 1px solid #eee;
-  }
-  .accordion-header {
-    margin: 0;
-  }
-  .accordion-button {
-    width: 100%;
-    text-align: left;
-    background: none;
-    border: none;
-    outline: none;
-    font-size: 1.1rem;
-    font-weight: 600;
-    padding: 18px 24px;
-    border-radius: 0;
-    transition: background 0.2s;
-    cursor: pointer;
-    color: #2d4834;
-  }
-  .accordion-button:hover {
-    background: radial-gradient(ellipse at bottom, #87e0fd 0%,#01262b 55%);
-  }
-  .accordion-button.collapsed {
-    background: #ffffff;
-    color: #333;
-  }
-  .accordion-button.collapsed:hover {
-    background: #79797917;
-  }
-  .accordion-button:not(.collapsed) {
-    background: #ffffff7a;
-    color: #125341;
-  }
-  .accordion-collapse {
+<style scoped>
+.accordion {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  padding: 0;
+  margin: 0 auto;
+  max-width: 1750px;
+  transition: margin-left 0.3s;
+  font-family: "Montserrat", sans-serif;
+}
+
+.accordion.with-sidebar {
+  margin-left: 50px;
+  width: calc(100% - 80px);
+}
+
+.accordion-item + .accordion-item {
+  border-top: 1px solid #eee;
+}
+
+.accordion-header {
+  margin: 0;
+}
+
+.accordion-button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 18px 24px;
+  border-radius: 0;
+  transition: background 0.2s;
+  cursor: pointer;
+  color: #2d4834;
+}
+
+.accordion-button:hover {
+  background: radial-gradient(ellipse at bottom, #87e0fd 0%,#01262b 55%);
+}
+
+.accordion-button.collapsed {
+  background: #ffffff;
+  color: #333;
+}
+
+.accordion-button.collapsed:hover {
+  background: #79797917;
+}
+
+.accordion-button:not(.collapsed) {
+  background: #ffffff7a;
+  color: #125341;
+}
+
+.accordion-collapse {
   transition: max-height 0.4s ease;
   overflow: hidden;
   background: #fff;
 }
 
-  .accordion-collapse.show {
-    animation: fadeIn 0.2s;
-  }
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  .accordion-body {
-    padding: 0px 24px;
-    font-size: 1rem;
-    color: #444;
-    background: #fff;
-  }
+.accordion-collapse.show {
+  animation: fadeIn 0.2s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.accordion-body {
+  padding: 0px 24px;
+  font-size: 1rem;
+  color: #444;
+  background: #fff;
+}
+
+.accordion-arrow {
+  width: 16px;
+  height: 16px;
+  margin-left: 10px;
+  transform: rotate(180deg); 
+  transition: transform 0.3s ease;
+}
+
+.accordion-arrow.arrow-up {
+  transform: rotate(0deg); 
+}
 
 @media (max-width: 900px) {
   .accordion.with-sidebar {
@@ -144,4 +175,4 @@ onMounted(() => {
     width: calc(100%);
   }
 }
-  </style>
+</style>

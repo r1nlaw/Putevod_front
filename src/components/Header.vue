@@ -22,7 +22,7 @@
           v-model="searchQuery"
           @keyup.enter="handleSearch"
           @input="debouncedSearch"
-          aria-label="Поиск достопримечательностей"
+          aria-label="поиск"
           ref="searchInput"
         />
         <img
@@ -111,7 +111,6 @@ const searchInput = ref(null);
 const domain = import.meta.env.VITE_BACKEND_URL;
 const fallbackImage = '/src/assets/fallback-image.png';
 
-// Дебонсим функцию handleSearch с задержкой 300 мс
 const debouncedSearch = debounce(handleSearch, 300);
 
 onMounted(() => {
@@ -125,17 +124,17 @@ onBeforeUnmount(() => {
   window.removeEventListener('storage', updateSelectedCount);
   window.removeEventListener('selectedPlacesUpdated', updateSelectedCount);
   document.removeEventListener('click', handleClickOutside);
-  debouncedSearch.cancel(); // Отменяем дебонсинг при размонтировании
+  debouncedSearch.cancel(); 
 });
 
 
 const handleRouteListClick = () => {
   const selectedPlaces = JSON.parse(localStorage.getItem('selectedPlaces') || '[]');
   console.log('handleRouteListClick: selectedPlaces length:', selectedPlaces.length);
-  if (selectedPlaces.length >= 2) {
+  if (selectedPlaces.length >= 1) {
     router.push('/routeList');
   } else {
-    alert('Выберите хотя бы 2 достопримечательности');
+    alert('Выберите хотя бы 1 достопримечательности');
   }
 };
 
@@ -540,6 +539,7 @@ function handleProfileClick() {
   display: flex;
   align-items: center;
   background: #f7f7f7d5;
+  cursor: pointer;
   border-radius: 20px;
   gap: 8px;
 }
@@ -648,6 +648,7 @@ function handleProfileClick() {
     font-size: 8px;
     height: 27px;
     padding: 0 2px 0 0;
+    cursor: pointer;
     border-radius: 10px;
   }
 
@@ -655,6 +656,7 @@ function handleProfileClick() {
     width: 27px;
     height: 27px;
     font-size: 14px;
+    cursor: pointer;
     margin-left: -2px;
   }
 
