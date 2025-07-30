@@ -207,7 +207,7 @@ const reviews = ref([]);
 const loading = ref(false);
 const error = ref(null);
 const domain = import.meta.env.VITE_BACKEND_URL;
-
+const selectedImage = ref(null)
 const isAuthenticated = ref(false);
 const currentUserId = ref(null);
 const jwtToken = ref(null);
@@ -233,7 +233,13 @@ const firstPartDescription = computed(() => {
   const splitIndex = lastSpaceIndex > 0 ? lastSpaceIndex : maxLength;
   return text.slice(0, splitIndex);
 });
+function openImageModal(imageUrl) {
+  selectedImage.value = imageUrl
+}
 
+function closeImageModal() {
+  selectedImage.value = null
+}
 const remainingDescription = computed(() => {
   if (!landmark.value || !landmark.value.data.description) return '';
   const maxLength = 700;
@@ -826,7 +832,7 @@ onMounted(() => {
 .carousel {
   position: relative;
   width: 100%;
-  max-width: 200px;
+  max-width: 50px;
   overflow: hidden;
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
@@ -835,7 +841,7 @@ onMounted(() => {
 .carousel-inner {
   position: relative;
   width: 100%;
-  height: 200px;
+  height: 50px;
 }
 
 .carousel-image {
@@ -880,6 +886,7 @@ onMounted(() => {
 }
 
 .carousel-counter {
+  opacity: 0;
   position: absolute;
   bottom: 8px;
   left: 50%;
