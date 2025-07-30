@@ -518,18 +518,24 @@ function onFileChange(e) {
   background-position: center;
   border-radius: 2rem;
   overflow: visible;
-  margin-bottom: -0.0rem;
-  height: 220px;
+  margin-bottom: -0.5rem;
+  height: 20vw;
+  min-height: 150px;
+  max-height: 300px;
 }
 
 .avatar {
   position: absolute;
   left: 1.5rem;
-  bottom: -100px;
-  width: 150px;
-  height: 150px;
+  bottom: -5rem;
+  width: 12vw;
+  min-width: 100px;
+  max-width: 150px;
+  height: 12vw;
+  min-height: 100px;
+  max-height: 150px;
   border-radius: 50%;
-  border: 7px solid white;
+  border: 0.5rem solid white;
   object-fit: cover;
   background-color: white;
   box-shadow: 0 0 6px rgba(0, 0, 0, 0.15);
@@ -539,13 +545,18 @@ function onFileChange(e) {
 .avatar-upload {
   display: flex;
   gap: 1vw;
+  align-items: center;
 }
 
 .avatar-small {
-  width: 100px;
-  height: 100px;
+  width: 8vw;
+  min-width: 80px;
+  max-width: 100px;
+  height: 8vw;
+  min-height: 80px;
+  max-height: 100px;
   border-radius: 50%;
-  border: 4px solid white;
+  border: 0.3rem solid white;
   object-fit: cover;
   background-color: white;
   box-shadow: 0 0 6px rgba(0, 0, 0, 0.15);
@@ -556,8 +567,7 @@ function onFileChange(e) {
   background-color: white;
   border-radius: 1rem;
   padding: 1.5rem;
-  padding-top: 0.1rem;
-  margin-bottom: 1.9rem;
+  margin-bottom: 1.5rem;
 }
 
 .info-header {
@@ -570,26 +580,26 @@ function onFileChange(e) {
 .text-info {
   display: flex;
   flex-direction: column;
-  margin-left: 0.5rem;
+  margin-left: 10rem;
+  margin-top: -1rem;
 }
 
 .title-with-icon {
   display: flex;
   align-items: center;
-  margin-left: 9.7rem;
   gap: 0.5rem;
 }
 
 h1 {
-  font-size: 1.875rem;
+  font-size: clamp(1.2rem, 4vw, 1.875rem);
   font-weight: 700;
   color: #111827;
   margin: 0;
 }
 
 .check-icon {
-  width: 20px;
-  height: 20px;
+  width: 1.2rem;
+  height: 1.2rem;
   color: #22c55e;
 }
 
@@ -599,31 +609,28 @@ h1 {
 
 .edit_avatar_modal {
   display: flex;
-  justify-content: center; 
-  align-items: center; 
+  justify-content: center;
+  align-items: center;
+  font-size: clamp(0.9rem, 2vw, 1.1rem);
 }
 
 .subtitle {
   color: #4b5563;
-  margin-top: -0.5rem;
-  font-size: 1.125rem;
+  font-size: clamp(0.9rem, 2vw, 1.125rem);
   line-height: 1.4;
-  margin-top: 0rem;
 }
 
 .readers-count {
   color: #6b7280;
-  margin-top: 0.25rem;
-  margin-left: 9.7rem;
-  font-size: 0.875rem;
+  font-size: clamp(0.7rem, 1.5vw, 0.875rem);
   display: flex;
   align-items: center;
   gap: 0.25rem;
 }
 
 .icon-message {
-  width: 16px;
-  height: 16px;
+  width: 1rem;
+  height: 1rem;
   color: #9ca3af;
 }
 
@@ -648,47 +655,45 @@ button {
 button:hover {
   background-color: #e5e7eb;
 }
+
 .status {
   color: #4b5563;
-  font-size: 1.125rem;
+  font-size: clamp(0.9rem, 2vw, 1.125rem);
   line-height: 1.4;
-  margin-top: 0rem;
-  margin-left: 9.5rem;
-
 }
 
 .info-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
-  gap: 2rem;
+  gap: 1.5rem;
   margin-top: 2rem;
   color: #374151;
   align-items: start;
-  margin-left: 2rem;
 }
 
 .location-category {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  margin-left: 3rem;
 }
 
 .location-category h3 {
   margin: 0 0 0.25rem 0;
   font-weight: 600;
   color: #111827;
+  font-size: clamp(0.9rem, 2vw, 1.125rem);
 }
 
 .location-category p {
   margin: 0;
   color: #374151;
+  font-size: clamp(0.8rem, 1.8vw, 1rem);
 }
 
 .social-media {
-  margin-top: 2rem;
+  margin-top: 1.5rem;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 1rem;
   flex-wrap: wrap;
 }
@@ -696,13 +701,11 @@ button:hover {
 .social-card {
   display: flex;
   align-items: center;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem;
   background: #f9f9f9;
-  border-radius: 8px;
+  border-radius: 0.5rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  height: 100px;
-  min-height: 100px;
+  min-height: 80px;
 }
 
 .social-icon {
@@ -710,8 +713,8 @@ button:hover {
 }
 
 .platform-icon {
-  width: 24px;
-  height: 24px;
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 .social-content {
@@ -723,7 +726,7 @@ button:hover {
 .social-name {
   font-weight: 600;
   color: #333;
-  font-size: 0.9rem;
+  font-size: clamp(0.7rem, 1.5vw, 0.9rem);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -731,12 +734,12 @@ button:hover {
 
 .social-link {
   color: #666;
-  font-size: 0.8rem;
+  font-size: clamp(0.6rem, 1.2vw, 0.8rem);
   text-decoration: none;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 20ch; 
+  max-width: 15ch;
 }
 
 .social-link:hover {
@@ -759,16 +762,11 @@ button:hover {
 .modal {
   background: white;
   border-radius: 1rem;
-  padding: 2rem;
-  width: 100%;
+  padding: 1.5rem;
+  width: 90%;
   max-width: 550px;
   max-height: 90vh;
   overflow-y: auto;
-  position: relative; 
-}
-
-.modal {
-  scrollbar-width: none;
 }
 
 .modal h2 {
@@ -777,6 +775,7 @@ button:hover {
   font-weight: 600;
   margin-bottom: 1.5rem;
   color: #111827;
+  font-size: clamp(1rem, 3vw, 1.5rem);
 }
 
 .close-button {
@@ -793,8 +792,8 @@ button:hover {
 }
 
 .close-icon {
-  width: 24px;
-  height: 24px;
+  width: 1.5rem;
+  height: 1.5rem;
   color: #374151;
 }
 
@@ -814,24 +813,25 @@ button:hover {
   margin-bottom: 0.25rem;
   display: flex;
   justify-content: space-between;
+  font-size: clamp(0.9rem, 2vw, 1.1rem);
 }
 
 .char-count {
-  font-size: 0.8rem;
+  font-size: clamp(0.7rem, 1.5vw, 0.8rem);
   color: #6b7280;
 }
 
 .edit-input {
   border: 1px solid #4949493d;
-  border-radius: 5px;
+  border-radius: 0.5rem;
   padding: 0.5rem;
-  font-size: 1rem;
+  font-size: clamp(0.9rem, 2vw, 1rem);
   width: 100%;
 }
 
 .edit-input.description-input {
   resize: vertical;
-  min-height: 100px;
+  min-height: 80px;
 }
 
 .social-edit {
@@ -845,7 +845,8 @@ button:hover {
   color: white;
   border: none;
   padding: 0.25rem 0.5rem;
-  border-radius: 5px;
+  border-radius: 0.5rem;
+  font-size: clamp(0.7rem, 1.5vw, 0.9rem);
   cursor: pointer;
 }
 
@@ -858,7 +859,8 @@ button:hover {
   color: white;
   border: none;
   padding: 0.5rem 1rem;
-  border-radius: 5px;
+  border-radius: 0.5rem;
+  font-size: clamp(0.7rem, 1.5vw, 0.9rem);
   cursor: pointer;
   margin-top: 0.5rem;
 }
@@ -881,69 +883,176 @@ select.edit-input {
   background-position-x: 98%;
   background-position-y: 50%;
 }
+@media (max-width: 1200px) {
+  .buttons-group {
+    position: static;
+    justify-content: end;
+    margin-top: 0rem;
+  }
+  .avatar {
+    left: 0.5rem;
+    width: 18vw;
+    height: 18vw;
+    min-width: 80px;
+    min-height: 80px;
+  }
+  .text-info {
+    margin-left: 9.4rem;
+  }
+  button {
+    padding: 0.5rem 1.5rem;
+
+  }
+}
+
+@media (max-width: 1150px) {
+  .text-info {
+    margin-left: 8.8rem;
+  }
+}
 
 @media (max-width: 900px) {
   .banner {
-    max-height: 40vw;
-    border-radius: 1rem;
-  }
-  h1 {
-    font-size: 1.4rem;
-  }
-  h2 {
-    font-size: 1.1rem;
-  }
-  .subtitle {
-    font-size: 1.0rem;
+    height: 25vw;
+    min-height: 120px;
   }
   .avatar {
-    max-width: 30vw;
-    max-height: 30vw;
-    left: 0.5rem;
     bottom: -3rem;
+    left: 0.5rem;
+    width: 18vw;
+    height: 18vw;
+    min-width: 80px;
+    min-height: 80px;
+  }
+  .text-info {
+    margin-left: 7.4rem;
+  }
+  .title-with-icon {
+    margin-left: 0;
   }
   .readers-count {
-    font-size: 0.8rem;
+    margin-left: 0;
+  }
+  .status {
+    margin-left: 0;
   }
   .info-grid {
-    margin-top: 5rem;
-    margin-left: 0rem;
+    grid-template-columns: 1fr;
+    margin-left: 0;
+  }
+  .location-category {
+    margin-left: 0;
   }
   .buttons-group {
-    position: absolute;
-    top: 28%;
-    right: 0;
-  }
-  button {
-    padding: 0.6rem 0.5rem;
-    font-size: 0.9rem;
-  }
-  .info-block {
-    padding: 0rem;
+    position: static;
+    margin-top: 1rem;
   }
   .social-media {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   }
 }
 
 @media (max-width: 640px) {
-  .info-grid {
-    grid-template-columns: 2fr 1fr;
+  .banner {
+    height: 30vw;
+    min-height: 100px;
   }
-  .text-info {
-    margin-left: 0%;
+  .avatar {
+    width: 25vw;
+    height: 25vw;
+    min-width: 80px;
+    min-height: 80px;
+  }
+  .avatar-small {
+    width: 10vw;
+    height: 10vw;
+    min-width: 60px;
+    min-height: 60px;
+  }
+  h1 {
+    font-size: clamp(1rem, 3vw, 1.4rem);
   }
   .social-media {
     grid-template-columns: 1fr;
+  }
+  .modal {
+    width: 95%;
+    padding: 1rem;
+  }
+  .text-info {
+    margin-left: 7.9rem;
   }
 }
 
-@media (max-width: 412px) {
-  .text-info {
-    margin-left: -8%;
+@media (max-width: 480px) {
+  .banner {
+    height: 35vw;
+    min-height: 80px;
   }
-  .social-media {
-    grid-template-columns: 1fr;
+  .avatar {
+
+    left: 0.3rem;
+  }
+  .info-block {
+    padding: 1rem;
+  }
+  .buttons-group button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.7rem;
+  }
+  .social-card {
+    min-height: 60px;
+    padding: 0.3rem;
+  }
+  .platform-icon {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+  .social-name {
+    font-size: 0.6rem;
+  }
+  .social-link {
+    font-size: 0.5rem;
+    max-width: 10ch;
+  }
+  .text-info {
+    margin-left: 6.9rem;
+  }
+}
+
+@media (max-width: 320px) {
+  .banner {
+    height: 40vw;
+    min-height: 60px;
+  }
+  .avatar {
+    width: 18vw;
+    height: 18vw;
+    min-width: 60px;
+    min-height: 60px;
+  }
+  .avatar-small {
+    width: 12vw;
+    height: 12vw;
+    min-width: 50px;
+    min-height: 50px;
+  }
+  h1 {
+    font-size: 0.9rem;
+  }
+  .modal h2 {
+    font-size: 1rem;
+  }
+  .edit-input {
+    font-size: 0.8rem;
+    padding: 0.3rem;
+  }
+  .char-count {
+    font-size: 0.6rem;
+  }
+  .modal-actions button {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.7rem;
   }
 }
 </style>
