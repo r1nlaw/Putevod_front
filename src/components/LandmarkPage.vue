@@ -112,7 +112,6 @@
     </div>
   </div>
   <div class="reviews-section">
-    <h2 class="description-title">Путевые заметки</h2>
     <div v-if="isAuthenticated" class="review-action">
       <button class="btn btn-primary" @click="openReviewModal">Оставить отзыв</button>
     </div>
@@ -131,9 +130,13 @@
               <p class="review-date">{{ formatReviewDate(review.created_at) }}</p>
             </div>
           </div>
-          <div class="review-rating">
-            <font-awesome-icon v-for="star in 5" :key="star" :icon="['fas', 'star']" :class="{ 'filled': star <= review.rating }" />
-          </div>
+          <button
+            v-if="isAuthenticated && review.user_id === currentUserId"
+            @click="deleteReview(review.id, landmark.data.id)"
+            class="delete-btn"
+          >
+          ×
+          </button>
         </div>
         <p class="review-text">{{ review.review_text || 'Без текста' }}</p>
         <div v-if="review.images && review.images.length" class="review-media">
@@ -182,13 +185,12 @@
             ></video>
           </div>
         </div>
-        <button
-            v-if="isAuthenticated && review.user_id === currentUserId"
-            @click="deleteReview(review.id, landmark.data.id)"
-            class="delete-btn"
-        >
-          Удалить
-        </button>
+        <div class="review-rating">
+          <div class="text-sm">
+            {{ review.rating }} / 5
+          </div>
+          <font-awesome-icon v-for="star in 5" :key="star" :icon="['fas', 'star']" :class="{ 'filled': star <= review.rating }" />
+        </div>
       </div>
     </div>
     <p v-else class="no-reviews">Отзывов пока нет. Будьте первым!</p>
@@ -257,7 +259,7 @@ const formatDate = (date) => {
 };
 
 const formatReviewDate = (date) => {
-  if (!date) return '31 июля 2025, 00:00'; // Обновлено с учетом текущей даты
+  if (!date) return '31 июля 2025, 00:00';
   return new Date(date).toLocaleString('ru-RU', {
     day: 'numeric',
     month: 'long',
@@ -350,7 +352,7 @@ const handleFileUpload = (event) => {
 
 const clearFiles = () => {
   newReview.value.images = [];
-  document.getElementById('images').value = ''; // Reset file input
+  document.getElementById('images').value = '';
 };
 
 const submitReview = async () => {
@@ -684,26 +686,31 @@ onMounted(() => {
 
 .btn-primary {
   padding: 12px 24px;
-  background-color: #007bff;
+  background-color: #b3b3b3;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 24px;
   font-size: 16px;
   cursor: pointer;
   transition: background-color 0.3s, transform 0.2s;
 }
 
 .btn-primary:hover {
-  background-color: #0056b3;
+  background-color: #868686;
   transform: translateY(-2px);
 }
-
+.text-sm {
+  color: black;
+  font-weight: 600;
+  margin-right: 0.4rem;
+  margin-top: -0.2rem;
+}
 .btn-secondary {
   padding: 12px 24px;
-  background-color: #6c757d;
+  background-color: #b4b4b4;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 24px;
   font-size: 16px;
   cursor: pointer;
   transition: background-color 0.3s, transform 0.2s;
@@ -745,11 +752,11 @@ onMounted(() => {
 }
 
 .review-card {
-  background-color: #fff;
+  position: relative;
+  background-color: #f5f5f5;
   border-radius: 12px;
   padding: 30px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e8e8e8;
+  
 }
 
 .review-header {
@@ -768,8 +775,8 @@ onMounted(() => {
 .avatar {
   width: 40px;
   height: 40px;
-  background-color: #e0e0e0;
-  border-radius: 50%;
+  background-color: #ececec;
+  border-radius: 20%;
 }
 
 .user-details {
@@ -793,10 +800,12 @@ onMounted(() => {
 .review-rating {
   display: flex;
   gap: 2px;
+  margin-top: 12px;
+  font-family: "Montserrat", sans-serif;
 }
 
 .review-rating .filled {
-  color: #ffd700;
+  color: #000000;
 }
 
 .review-text {
@@ -899,9 +908,13 @@ onMounted(() => {
 }
 
 .delete-btn {
-  padding: 8px 16px;
-  background-color: #dc3545;
-  color: white;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 20px;
+  padding: 3px 8px;
+  background-color: #f3f3f3;
+  color: rgb(0, 0, 0);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -909,7 +922,7 @@ onMounted(() => {
 }
 
 .delete-btn:hover {
-  background-color: #c82333;
+  background-color: #e9e9e9;
   transform: translateY(-2px);
 }
 
@@ -1033,3 +1046,4 @@ onMounted(() => {
   }
 }
 </style>
+
