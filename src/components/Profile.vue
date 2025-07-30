@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div class="container" :class="{'with-sidebar': sidebarOpen}">
     <!-- Баннер -->
     <div
         class="banner"
@@ -47,7 +47,7 @@
           </p>
         </div>
 
-        <div class="buttons-group">
+        <div class="buttons-group" :class="{'with-sidebar': sidebarOpen}">
           <button>Статистика</button>
           <button @click="openModal">Редактировать</button>
           <button aria-label="Дополнительные опции">...</button>
@@ -189,6 +189,10 @@ import avatarImage from '@/assets/images/user_avatar.png'
 const showModal = ref(false)
 const router = useRouter()
 
+const props = defineProps({
+  sidebarOpen: Boolean,
+});
+
 const profile = reactive({
   user_id: null,
   user_name: '',
@@ -276,6 +280,7 @@ const domain = import.meta.env.VITE_BACKEND_URL
 onMounted(async () => {
   const token = localStorage.getItem('token')
   const user_id = localStorage.getItem('user_id')
+  console.log('sidebarOpen:', props.sidebarOpen)
 
   if (!token || !user_id) {
     console.warn('Токен или user_id отсутствует')
@@ -790,6 +795,11 @@ button:hover {
   align-items: center;
   justify-content: center;
 }
+.buttons-group.with-sidebar {
+    position: static;
+    justify-content: end;
+    margin-top: 0rem;
+}
 
 .close-icon {
   width: 1.5rem;
@@ -882,6 +892,13 @@ select.edit-input {
   background-repeat: no-repeat;
   background-position-x: 98%;
   background-position-y: 50%;
+}
+@media (max-width: 1450px) {
+  .buttons-group {
+    position: static;
+    justify-content: end;
+    margin-top: 0rem;
+  }
 }
 @media (max-width: 1200px) {
   .buttons-group {
