@@ -57,13 +57,11 @@
             </li>
           </ul>
         </div>
-
-        <!-- Reviews Section -->
-        <div class="reviews-section">
-          <h2 class="description-title">⭐ Путевые заметки </h2>
-
-          <!-- Review Form -->
-          <div v-if="isAuthenticated" class="review-form">
+      </div>
+      <!-- Модальное окно для отзывов -->
+      <div v-if="showReviewModal" class="modal-overlay" @click.self="closeReviewModal">
+        <div class="modal-content">
+          <div class="review-form">
             <h3>Оставить отзыв</h3>
             <form @submit.prevent="submitReview">
               <div class="form-group">
@@ -99,94 +97,107 @@
                   <button type="button" class="clear-btn" @click="clearFiles">Очистить</button>
                 </div>
               </div>
-              <button type="submit" class="btn btn-primary">Отправить</button>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Отправить</button>
+                <button type="button" class="btn btn-secondary" @click="closeReviewModal">Отмена</button>
+              </div>
             </form>
             <p v-if="submitMessage" :class="submitMessage.includes('Ошибка') ? 'error-message' : 'success-message'">
               {{ submitMessage }}
             </p>
           </div>
-          <div v-else>
-            <p>Войдите в аккаунт, чтобы оставить отзыв.</p>
-          </div>
-
-          <!-- Reviews List -->
-          <div v-if="reviews.length" class="reviews-list">
-            <div v-for="review in reviews" :key="review.id" class="review-card">
-              <div class="review-header">
-                <div class="user-info">
-                  <font-awesome-icon icon="user" class="user-icon" />
-                  <p class="review-user">Пользователь: {{ review.user.username || review.user_id }}</p>
-                </div>
-                <p class="review-rating">Оценка: {{ review.rating }}</p>
-              </div>
-              <p class="review-text">{{ review.review_text || 'Без текста' }}</p>
-              <div v-if="review.images && review.images.length" class="review-media">
-                <!-- Photo Carousel -->
-                <div v-if="review.images.some(media => media.media_type === 'photo')" class="carousel">
-                  <div class="carousel-inner">
-                    <img
-                        v-for="(media, index) in review.images.filter(m => m.media_type === 'photo')"
-                        :key="media.id || media.path"
-                        :src="domain + '/' + media.path"
-                        :class="{ active: currentImageIndex[review.id] === index }"
-                        alt="Review photo"
-                        @click="openModal(domain + '/' + media.path)"
-                        class="carousel-image clickable"
-                    />
-                  </div>
-                  <button
-                      v-if="review.images.filter(m => m.media_type === 'photo').length > 1"
-                      class="carousel-btn prev"
-                      @click="prevImage(review.id, review.images.filter(m => m.media_type === 'photo').length)"
-                  >
-                    &lt;
-                  </button>
-                  <button
-                      v-if="review.images.filter(m => m.media_type === 'photo').length > 1"
-                      class="carousel-btn next"
-                      @click="nextImage(review.id, review.images.filter(m => m.media_type === 'photo').length)"
-                  >
-                    &gt;
-                  </button>
-                  <div v-if="review.images.filter(m => m.media_type === 'photo').length > 0" class="carousel-counter">
-                    {{ currentImageIndex[review.id] + 1 }} / {{ review.images.filter(m => m.media_type === 'photo').length }}
-                  </div>
-                </div>
-                <!-- Videos -->
-                <div
-                    v-if="review.images.some(media => media.media_type === 'video')"
-                    class="video-container"
-                >
-                  <video
-                      v-for="media in review.images.filter(m => m.media_type === 'video')"
-                      :key="media.id || media.path"
-                      :src="domain + '/' + media.path"
-                      controls
-                      class="review-video"
-                  ></video>
-                </div>
-              </div>
-              <button
-                  v-if="isAuthenticated && review.user_id === currentUserId"
-                  @click="deleteReview(review.id, landmark.data.id)"
-                  class="delete-btn"
-              >
-                Удалить
-              </button>
-            </div>
-          </div>
-          <p v-else class="no-reviews">Отзывов пока нет. Будьте первым!</p>
+          <button class="modal-close" @click="closeReviewModal">×</button>
         </div>
       </div>
-      <ImageModal :show="showModal" :image-src="currentImage" @close="closeModal" />
     </div>
+  </div>
+  <div class="reviews-section">
+    <h2 class="description-title">Путевые заметки</h2>
+    <div v-if="isAuthenticated" class="review-action">
+      <button class="btn btn-primary" @click="openReviewModal">Оставить отзыв</button>
+    </div>
+    <div v-else>
+      <p>Войдите в аккаунт, чтобы оставить отзыв.</p>
+    </div>
+
+    <!-- Reviews List -->
+    <div v-if="reviews.length" class="reviews-list">
+      <div v-for="review in reviews" :key="review.id" class="review-card">
+        <div class="review-header">
+          <div class="user-info">
+            <div class="avatar" />
+            <div class="user-details">
+              <p class="review-user">{{ review.user.username || `Пользователь ${review.user_id}` }}</p>
+              <p class="review-date">{{ formatReviewDate(review.created_at) }}</p>
+            </div>
+          </div>
+          <div class="review-rating">
+            <font-awesome-icon v-for="star in 5" :key="star" :icon="['fas', 'star']" :class="{ 'filled': star <= review.rating }" />
+          </div>
+        </div>
+        <p class="review-text">{{ review.review_text || 'Без текста' }}</p>
+        <div v-if="review.images && review.images.length" class="review-media">
+          <!-- Photo Carousel -->
+          <div v-if="review.images.some(media => media.media_type === 'photo')" class="carousel">
+            <div class="carousel-inner">
+              <img
+                  v-for="(media, index) in review.images.filter(m => m.media_type === 'photo')"
+                  :key="media.id || media.path"
+                  :src="domain + '/' + media.path"
+                  :class="{ active: currentImageIndex[review.id] === index }"
+                  alt="Review photo"
+                  @click="openModal(domain + '/' + media.path)"
+                  class="carousel-image clickable"
+              />
+            </div>
+            <button
+                v-if="review.images.filter(m => m.media_type === 'photo').length > 1"
+                class="carousel-btn prev"
+                @click="prevImage(review.id, review.images.filter(m => m.media_type === 'photo').length)"
+            >
+              &lt;
+            </button>
+            <button
+                v-if="review.images.filter(m => m.media_type === 'photo').length > 1"
+                class="carousel-btn next"
+                @click="nextImage(review.id, review.images.filter(m => m.media_type === 'photo').length)"
+            >
+              &gt;
+            </button>
+            <div v-if="review.images.filter(m => m.media_type === 'photo').length > 0" class="carousel-counter">
+              {{ currentImageIndex[review.id] + 1 }} / {{ review.images.filter(m => m.media_type === 'photo').length }}
+            </div>
+          </div>
+          <!-- Videos -->
+          <div
+              v-if="review.images.some(media => media.media_type === 'video')"
+              class="video-container"
+          >
+            <video
+                v-for="media in review.images.filter(m => m.media_type === 'video')"
+                :key="media.id || media.path"
+                :src="domain + '/' + media.path"
+                controls
+                class="review-video"
+            ></video>
+          </div>
+        </div>
+        <button
+            v-if="isAuthenticated && review.user_id === currentUserId"
+            @click="deleteReview(review.id, landmark.data.id)"
+            class="delete-btn"
+        >
+          Удалить
+        </button>
+      </div>
+    </div>
+    <p v-else class="no-reviews">Отзывов пока нет. Будьте первым!</p>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import ImageModal from './ImageModal.vue';
 
 const route = useRoute();
 const landmark = ref(null);
@@ -201,14 +212,15 @@ const jwtToken = ref(null);
 const submitMessage = ref('');
 
 const newReview = ref({
-  rating: 5, // Default rating set to 5
+  rating: 5,
   review_text: '',
   images: [],
 });
 
 const showModal = ref(false);
 const currentImage = ref('');
-const currentImageIndex = ref({}); // Track carousel index for each review
+const showReviewModal = ref(false);
+const currentImageIndex = ref({});
 
 const firstPartDescription = computed(() => {
   if (!landmark.value || !landmark.value.data.description) return '';
@@ -242,6 +254,17 @@ const reviewCount = computed(() => {
 
 const formatDate = (date) => {
   return new Date(date).toLocaleString('ru-RU');
+};
+
+const formatReviewDate = (date) => {
+  if (!date) return '31 июля 2025, 00:00'; // Обновлено с учетом текущей даты
+  return new Date(date).toLocaleString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 };
 
 const checkAuth = () => {
@@ -287,7 +310,6 @@ const fetchReviews = async () => {
     if (!response.ok) throw new Error('Ошибка загрузки отзывов');
     const data = await response.json();
     reviews.value = Array.isArray(data.data) ? data.data : [];
-    // Initialize carousel index for each review
     reviews.value.forEach(review => {
       currentImageIndex.value[review.id] = 0;
     });
@@ -332,6 +354,12 @@ const clearFiles = () => {
 };
 
 const submitReview = async () => {
+  if (!landmark.value?.data?.id) {
+    submitMessage.value = 'Ошибка: Достопримечательность не загружена';
+    setTimeout(() => (submitMessage.value = ''), 3000);
+    return;
+  }
+
   const formData = new FormData();
   formData.append('user_id', currentUserId.value);
   formData.append('landmark_id', landmark.value.data.id);
@@ -352,8 +380,9 @@ const submitReview = async () => {
       throw new Error(errData.message || 'Ошибка отправки отзыва');
     }
     await fetchReviews();
-    newReview.value = { rating: 5, review_text: '', images: [] }; // Reset with default rating 5
+    newReview.value = { rating: 5, review_text: '', images: [] };
     submitMessage.value = 'Отзыв успешно отправлен';
+    showReviewModal.value = false;
     setTimeout(() => (submitMessage.value = ''), 3000);
   } catch (err) {
     console.error('Error submitting review:', err);
@@ -363,6 +392,12 @@ const submitReview = async () => {
 };
 
 const deleteReview = async (reviewId, landmarkId) => {
+  if (!landmarkId) {
+    submitMessage.value = 'Ошибка: ID достопримечательности не определён';
+    setTimeout(() => (submitMessage.value = ''), 3000);
+    return;
+  }
+
   try {
     const response = await fetch(`${domain}/user/review/`, {
       method: 'DELETE',
@@ -381,7 +416,7 @@ const deleteReview = async (reviewId, landmarkId) => {
       throw new Error(errData.message || 'Ошибка удаления отзыва');
     }
     await fetchReviews();
-    submitMessage.value = 'Отзыв успешно удален';
+    submitMessage.value = 'Отзыв успешно удалён';
     setTimeout(() => (submitMessage.value = ''), 3000);
   } catch (err) {
     console.error('Error deleting review:', err);
@@ -397,6 +432,18 @@ const openModal = (imageSrc) => {
 
 const closeModal = () => {
   showModal.value = false;
+};
+
+const openReviewModal = () => {
+  newReview.value = { rating: 5, review_text: '', images: [] };
+  submitMessage.value = '';
+  showReviewModal.value = true;
+};
+
+const closeReviewModal = () => {
+  showReviewModal.value = false;
+  newReview.value = { rating: 5, review_text: '', images: [] };
+  submitMessage.value = '';
 };
 
 const prevImage = (reviewId, photoCount) => {
@@ -419,7 +466,7 @@ onMounted(() => {
   padding: 0;
   display: flex;
   justify-content: center;
-  font-family: 'Segoe UI', sans-serif;
+  font-family: "Montserrat", sans-serif;
   background-color: #f5f5f5;
 }
 
@@ -536,13 +583,24 @@ onMounted(() => {
 }
 
 .reviews-section {
-  margin-top: 32px;
-  padding-top: 32px;
-  border-top: 1px solid #eee;
+  margin: 32px auto 0;
+  font-family: "Montserrat", sans-serif;
+  background-color: #fff;
+  border-radius: 24px;
+  padding: 32px;
+  max-width: 1540px;
+  width: 100%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.review-action {
+  margin-bottom: 20px;
 }
 
 .review-form {
   margin-bottom: 32px;
+  width: 100%;
+  max-width: 600px;
   padding: 24px;
   background-color: #f9f9f9;
   border-radius: 16px;
@@ -640,6 +698,28 @@ onMounted(() => {
   transform: translateY(-2px);
 }
 
+.btn-secondary {
+  padding: 12px 24px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+  transform: translateY(-2px);
+}
+
+.form-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: flex-end;
+}
+
 .success-message {
   margin-top: 16px;
   padding: 12px;
@@ -666,16 +746,10 @@ onMounted(() => {
 
 .review-card {
   background-color: #fff;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border: 1px solid #e0e0e0;
-}
-
-.review-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e8e8e8;
 }
 
 .review-header {
@@ -683,82 +757,76 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #f0f0f0;
 }
 
 .user-info {
   display: flex;
   align-items: center;
+  gap: 12px;
 }
 
-.user-icon {
-  margin-right: 8px;
-  color: #666;
-  font-size: 18px;
+.avatar {
+  width: 40px;
+  height: 40px;
+  background-color: #e0e0e0;
+  border-radius: 50%;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
 }
 
 .review-user {
+  margin: 0;
+  font-size: 16px;
   font-weight: 600;
   color: #2c3e50;
-  font-size: 16px;
+}
+
+.review-date {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #7f8c8d;
 }
 
 .review-rating {
-  font-weight: 600;
-  color: #e67e22;
-  font-size: 16px;
-  background-color: #fff3e0;
-  padding: 4px 12px;
-  border-radius: 12px;
+  display: flex;
+  gap: 2px;
+}
+
+.review-rating .filled {
+  color: #ffd700;
 }
 
 .review-text {
-  font-size: 16px;
-  line-height: 1.8;
-  color: #2c3e50;
-  margin-bottom: 16px;
-  padding: 16px;
-  background-color: #f8f9fa;
-  border-left: 4px solid #007bff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  font-style: italic;
-  position: relative;
+  margin: 12px 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #34495e;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
 }
 
-.review-text::before {
-  content: '“';
-  font-size: 24px;
-  color: #007bff;
-  position: absolute;
-  left: 8px;
-  top: 8px;
-}
-
-.review-text::after {
-  content: '”';
-  font-size: 24px;
-  color: #007bff;
-  position: absolute;
-  right: 8px;
-  bottom: 8px;
+.review-media {
+  margin-top: 12px;
+  margin-bottom: 12px;
 }
 
 .carousel {
   position: relative;
   width: 100%;
-  max-width: 600px;
-  margin: 0 auto 16px;
+  max-width: 200px;
   overflow: hidden;
-  border-radius: 12px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .carousel-inner {
   position: relative;
   width: 100%;
-  height: 300px;
+  height: 200px;
 }
 
 .carousel-image {
@@ -783,9 +851,9 @@ onMounted(() => {
   background-color: rgba(0, 0, 0, 0.5);
   color: white;
   border: none;
-  padding: 10px;
+  padding: 8px;
   cursor: pointer;
-  font-size: 18px;
+  font-size: 16px;
   border-radius: 50%;
   transition: background-color 0.3s;
 }
@@ -804,26 +872,26 @@ onMounted(() => {
 
 .carousel-counter {
   position: absolute;
-  bottom: 10px;
+  bottom: 8px;
   left: 50%;
   transform: translateX(-50%);
   background-color: rgba(0, 0, 0, 0.5);
   color: white;
-  padding: 5px 10px;
-  border-radius: 12px;
-  font-size: 14px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 12px;
 }
 
 .video-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
   margin-top: 12px;
 }
 
 .review-video {
-  max-width: 200px;
-  border-radius: 8px;
+  max-width: 180px;
+  border-radius: 6px;
 }
 
 .clickable {
@@ -850,6 +918,47 @@ onMounted(() => {
   color: #666;
   text-align: center;
   margin-top: 20px;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #fff;
+  border-radius: 16px;
+  padding: 45px;
+  max-width: 700px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #333;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.modal-close:hover {
+  color: #007bff;
 }
 
 @media (max-width: 768px) {
@@ -882,10 +991,10 @@ onMounted(() => {
   }
   .carousel {
     max-width: 100%;
-    height: 200px;
+    height: 150px;
   }
   .carousel-inner {
-    height: 200px;
+    height: 150px;
   }
   .review-video {
     max-width: 100%;
@@ -898,12 +1007,29 @@ onMounted(() => {
     width: 100%;
   }
   .review-text {
-    padding: 12px;
+    padding: 10px;
+    font-size: 13px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+  }
+  .form-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .modal-content {
+    width: 95%;
+    padding: 16px;
+  }
+  .avatar {
+    width: 30px;
+    height: 30px;
+  }
+  .review-user {
     font-size: 14px;
   }
-  .review-text::before,
-  .review-text::after {
-    font-size: 20px;
+  .review-date {
+    font-size: 11px;
   }
 }
 </style>
