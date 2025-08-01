@@ -78,15 +78,6 @@
         <div class="social-media">
           <div v-for="(social, index) in profile.social_media" :key="index" class="social-card">
             <div class="social-icon">
-              <svg v-if="social.platform === 'youtube'" class="platform-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.377.505 9.377.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-              </svg>
-              <svg v-if="social.platform === 'twitch'" class="platform-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M2.149 0l-2.149 2.15v18.846h7.168v3.004h3.004v-3.004h3.996v-7.168h-14.019zm18.846 0h-7.168l2.149 2.15 5.019 5.019v-7.169zm-10.019 10.019h3.996v3.996h-3.996v-3.996zm8.004-8.004h-18.85v21.152h5.019v-14.019h13.831v-7.133z"/>
-              </svg>
-              <svg v-if="social.platform === 'meteliyox'" class="platform-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
-              </svg>
             </div>
             <div class="social-content">
               <span class="social-name">{{ social.name }}</span>
@@ -125,17 +116,17 @@
             </label>
 
             <label>Имя пользователя
-              <span class="char-count">Осталось: {{ remainingChars.userName }} / 20</span>
+              <span class="char-count">{{ remainingChars.userName }} / 20</span>
             </label>
             <input v-model="edited.user_name" class="edit-input" placeholder="Имя пользователя" maxlength="20" />
 
             <label>Статус
-              <span class="char-count">Осталось: {{ remainingChars.status }} / 50</span>
+              <span class="char-count">{{ remainingChars.status }} / 50</span>
             </label>
             <input v-model="edited.status" class="edit-input" placeholder="Статус" maxlength="50" />
 
             <label>Биография
-              <span class="char-count">Осталось: {{ remainingChars.bio }} / 500</span>
+              <span class="char-count">{{ remainingChars.bio }} / 500</span>
             </label>
             <textarea v-model="edited.bio" class="edit-input description-input" placeholder="Биография" maxlength="500"></textarea>
 
@@ -206,14 +197,7 @@ const profile = reactive({
   category: '',
   rating: 0,
   routes: [],
-  social_media: [
-    { platform: 'youtube', name: 'Блог Дениса', link: 'https://youtube.com/@blogdenisa' },
-    { platform: 'twitch', name: 'TripLive', link: 'https://twitch.tv/triplive' },
-    { platform: 'meteliyox', name: 'Денис Иващенко', link: 'https://meteliyox.com' },
-    { platform: 'youtube', name: 'Блог Дениса', link: 'https://youtube.com/@blogdenisa' },
-    { platform: 'twitch', name: 'TripLive', link: 'https://twitch.tv/triplive' },
-    { platform: 'meteliyox', name: 'Денис Иващенко', link: 'https://meteliyox.com' },
-  ]
+  social_media: []
 })
 
 const edited = reactive({
@@ -330,14 +314,7 @@ onMounted(async () => {
       { id: 2, name: 'Пеший маршрут по горам' },
       { id: 3, name: 'Велоэкскурсия по городу' }
     ]
-    profile.social_media = data.social_media || [
-      { platform: 'youtube', name: 'Блог Дениса', link: 'https://youtube.com/@blogdenisa' },
-      { platform: 'twitch', name: 'TripLive', link: 'https://twitch.tv/triplive' },
-      { platform: 'meteliyox', name: 'Денис Иващенко', link: 'https://meteliyox.com' },
-      { platform: 'youtube', name: 'Блог Дениса', link: 'https://youtube.com/@blogdenisa' },
-      { platform: 'twitch', name: 'TripLive', link: 'https://twitch.tv/triplive' },
-      { platform: 'meteliyox', name: 'Денис Иващенко', link: 'https://meteliyox.com' },
-    ]
+    profile.social_media = data.social_media || []
 
     // Инициализация полей редактирования
     Object.assign(edited, {
@@ -851,7 +828,7 @@ button:hover {
 }
 
 .remove-social {
-  background: #ff4444;
+  background: #dbdbdb;
   color: white;
   border: none;
   padding: 0.25rem 0.5rem;
@@ -861,11 +838,11 @@ button:hover {
 }
 
 .remove-social:hover {
-  background: #cc0000;
+  background: #e6e6e6;
 }
 
 .add-social {
-  background: #4CAF50;
+  background: #d8d8d8;
   color: white;
   border: none;
   padding: 0.5rem 1rem;
@@ -876,7 +853,7 @@ button:hover {
 }
 
 .add-social:hover {
-  background: #45a049;
+  background: #ebebeb;
 }
 
 .modal-actions {

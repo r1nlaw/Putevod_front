@@ -655,6 +655,10 @@ onMounted(() => {
   background-color: #fff;
 }
 
+textarea.form-control {
+  resize: none;
+}
+
 .selected-files {
   margin-top: 10px;
   padding: 12px;
@@ -762,7 +766,6 @@ onMounted(() => {
   background-color: #f5f5f5;
   border-radius: 12px;
   padding: 30px;
-  
 }
 
 .review-header {
@@ -1053,4 +1056,3 @@ onMounted(() => {
   }
 }
 </style>
-
